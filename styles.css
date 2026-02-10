@@ -135,10 +135,10 @@ section {
 }
 
 /* Player positions around the circle */
-#player0 { top: 40px; left: 50%; transform: translateX(-50%); }
-#player1 { right: 40px; top: 50%; transform: translateY(-50%); }
-#player2 { bottom: 40px; left: 50%; transform: translateX(-50%); }
-#player3 { left: 40px; top: 50%; transform: translateY(-50%); }
+#player0 { top: 10px; left: 50%; transform: translateX(-50%); }
+#player1 { right: 10px; top: 50%; transform: translateY(-50%); }
+#player2 { bottom: 10px; left: 50%; transform: translateX(-50%); }
+#player3 { left: 10px; top: 50%; transform: translateY(-50%); }
 
 /* Center pot */
 #centerPot {
@@ -181,4 +181,5 @@ button:hover {
   background: #666;
   transform: translateY(-2px);
 }
+
 
