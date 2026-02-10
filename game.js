@@ -73,7 +73,7 @@ function updateTable() {
   players.forEach((p, i) => {
     const playerDiv = document.getElementById("player" + i);
     if (playerDiv) {
-      // ✅ Only update the name and chips fields, not the whole div
+      // ✅ Only update the name and chips fields
       const nameDiv = playerDiv.querySelector(".name");
       const chipsDiv = playerDiv.querySelector(".chips");
       if (nameDiv) nameDiv.textContent = p;
