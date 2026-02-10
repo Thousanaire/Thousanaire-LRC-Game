@@ -11,7 +11,7 @@ document.getElementById("joinBtn").addEventListener("click", () => {
     chips.push(3);
     updateTable();
     document.getElementById("nameInput").value = "";
-    highlightCurrentPlayer(); // show first player once someone joins
+    highlightCurrentPlayer();
   }
 });
 
@@ -32,9 +32,11 @@ document.getElementById("rollBtn").addEventListener("click", () => {
     outcomes.push(rollDie());
   }
 
-  // Show dice images instead of text
+  // Show dice images
   document.getElementById("results").innerHTML =
     players[currentPlayer] + " rolled: " + renderDice(outcomes);
+
+  let wildRolled = false;
 
   outcomes.forEach(outcome => {
     if (chips[currentPlayer] > 0) {
@@ -48,29 +50,22 @@ document.getElementById("rollBtn").addEventListener("click", () => {
         chips[currentPlayer]--;
         centerPot++;
       } else if (outcome === "Wild") {
-        // Wild: steal one chip from another player
-        let targetIndex;
-        do {
-          targetIndex = Math.floor(Math.random() * players.length);
-        } while (targetIndex === currentPlayer);
-
-        if (chips[targetIndex] > 0) {
-          chips[targetIndex]--;
-          chips[currentPlayer]++;
-          document.getElementById("results").innerText +=
-            `\n${players[currentPlayer]} stole a chip from ${players[targetIndex]}!`;
-        } else {
-          document.getElementById("results").innerText +=
-            `\n${players[currentPlayer]} rolled Wild but ${players[targetIndex]} had no chips.`;
-        }
+        wildRolled = true; // flag Wild
       }
-      // Dottt means keep chip, no action
+      // Dottt = keep chip
     }
   });
 
   updateTable();
-  checkWinner();
-  nextTurn();
+
+  if (wildRolled) {
+    document.getElementById("results").innerText +=
+      `\n${players[currentPlayer]} rolled a Wild! Choose a player to steal from.`;
+    showStealOptions(currentPlayer);
+  } else {
+    checkWinner();
+    nextTurn();
+  }
 });
 
 function rollDie() {
@@ -110,7 +105,7 @@ function checkWinner() {
     document.getElementById("results").innerText =
       players[winnerIndex] + " wins the pot of " + centerPot + "!";
     document.getElementById("rollBtn").disabled = true;
-    highlightCurrentPlayer(); // freeze highlight on winner
+    highlightCurrentPlayer();
   }
 }
 
@@ -119,4 +114,37 @@ function highlightCurrentPlayer() {
   document.querySelectorAll('.player').forEach((el, i) => {
     el.classList.toggle('active', i === currentPlayer);
   });
+}
+
+// Show steal options when Wild is rolled
+function showStealOptions(rollerIndex) {
+  const resultsDiv = document.getElementById("results");
+  const opponents = players.map((p, i) => ({ name: p, index: i }))
+                           .filter(o => o.index !== rollerIndex);
+
+  const optionsDiv = document.createElement("div");
+  optionsDiv.id = "stealOptions";
+
+  opponents.forEach(opponent => {
+    const btn = document.createElement("button");
+    btn.textContent = `Steal from ${opponent.name}`;
+    btn.onclick = () => {
+      if (chips[opponent.index] > 0) {
+        chips[opponent.index]--;
+        chips[rollerIndex]++;
+        updateTable();
+        document.getElementById("results").innerText +=
+          `\n${players[rollerIndex]} stole a chip from ${opponent.name}!`;
+      } else {
+        document.getElementById("results").innerText +=
+          `\n${opponent.name} has no chips to steal.`;
+      }
+      optionsDiv.remove();
+      checkWinner();
+      nextTurn();
+    };
+    optionsDiv.appendChild(btn);
+  });
+
+  resultsDiv.appendChild(optionsDiv);
 }
