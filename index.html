@@ -16,34 +16,19 @@
   </header>
 
   <main>
-    <!-- Settings Panel -->
-    <section id="settings">
-      <h2>Settings</h2>
-      <div class="options">
-        <label><input type="checkbox" id="singleDie"> Single Die</label><br>
-        <label><input type="checkbox" id="autoRemove"> Auto-remove after roll</label>
-      </div>
-      <h3>Add Players</h3>
-      <div class="add-player">
-        <input type="text" id="playerName" placeholder="Player name">
-        <button id="addPlayerBtn">+</button>
-      </div>
-      <div class="player-controls">
-        <button id="shuffleBtn">Shuffle</button>
-        <button id="sortBtn">Sort</button>
-      </div>
-      <div id="playerList">
-        <!-- Player cards will be injected here -->
-      </div>
-    </section>
-
     <!-- Dice Display Panel -->
     <section id="dicePanel">
       <h2>Dice Roll</h2>
       <img src="assets/dice/die1.png" alt="Die" class="die" id="dieDisplay">
       <div id="result">Result: -</div>
-      <button id="rollBtn">Roll Dice</button>
+      <div class="dice-controls">
+        <button id="rollBtn">Roll Dice</button>
+        <button id="shuffleBtn">Shuffle</button>
+      </div>
       <div id="currentTurn">Current turn: -</div>
+      <div id="playerList">
+        <!-- Player cards will be injected here -->
+      </div>
     </section>
 
     <!-- Roll History Panel -->
