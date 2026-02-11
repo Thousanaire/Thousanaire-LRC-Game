@@ -90,16 +90,22 @@ main {
 #table {
   display: grid;
   grid-template-areas:
-    "p0 p1"
-    "center center"
-    "p2 p3";
-  grid-template-columns: 1fr 1fr;
-  grid-gap: 20px;
+    ". top ."
+    "left center right"
+    ". bottom .";
+  grid-template-columns: 100px 1fr 100px;
+  grid-template-rows: 100px 1fr 100px;
   align-items: center;
   justify-items: center;
+  gap: 20px;
 }
 
-/* Player avatars */
+/* Player positions */
+.player.top { grid-area: top; }
+.player.bottom { grid-area: bottom; }
+.player.left { grid-area: left; }
+.player.right { grid-area: right; }
+
 .player {
   display: flex;
   flex-direction: column;
@@ -134,10 +140,15 @@ main {
   justify-content: center;
 }
 
-.die {
-  width: 120px;
-  height: 120px;
+#diceArea {
+  display: flex;
+  gap: 10px;
   margin-bottom: 10px;
+}
+
+.die {
+  width: 80px;
+  height: 80px;
 }
 
 #centerPot {
@@ -200,4 +211,31 @@ main {
   background: #222;
   color: #eee;
   border-radius: 8px;
-  padding: 
+  padding: 0.8rem;
+  margin-bottom: 0.5rem;
+  box-sizing: border-box;
+}
+
+.chat-input {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#chatInput {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #222;
+  color: #fff;
+  margin-right: 0.5rem;
+}
+
+#sendBtn {
+  background: linear-gradient(135deg, #ff4081, #7c4dff);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
