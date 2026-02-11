@@ -16,19 +16,47 @@
   </header>
 
   <main>
-    <!-- Dice Display Panel -->
-    <section id="dicePanel">
-      <h2>Dice Roll</h2>
-      <img src="assets/dice/die1.png" alt="Die" class="die" id="dieDisplay">
-      <div id="result">Result: -</div>
-      <div class="dice-controls">
+    <!-- Game Table -->
+    <section id="game">
+      <h2>Game Board</h2>
+      <div id="table">
+        <!-- Top players -->
+        <div class="player" id="player0">
+          <img src="assets/avatar/AvatarOne.png" class="avatar" alt="Player 0 Avatar">
+          <div class="name"></div>
+          <div class="chips">Chips: 3</div>
+        </div>
+        <div class="player" id="player1">
+          <img src="assets/avatar/AvatarTwo.png" class="avatar" alt="Player 1 Avatar">
+          <div class="name"></div>
+          <div class="chips">Chips: 3</div>
+        </div>
+
+        <!-- Center dice + pot -->
+        <div id="centerArea">
+          <img src="assets/dice/die1.png" alt="Die" class="die" id="dieDisplay">
+          <div id="centerPot">Center Pot: 0</div>
+        </div>
+
+        <!-- Bottom players -->
+        <div class="player" id="player2">
+          <img src="assets/avatar/Avatar3.png" class="avatar" alt="Player 2 Avatar">
+          <div class="name"></div>
+          <div class="chips">Chips: 3</div>
+        </div>
+        <div class="player" id="player3">
+          <img src="assets/avatar/AvatarFour.png" class="avatar" alt="Player 3 Avatar">
+          <div class="name"></div>
+          <div class="chips">Chips: 3</div>
+        </div>
+      </div>
+
+      <div class="controls">
         <button id="rollBtn">Roll Dice</button>
         <button id="shuffleBtn">Shuffle</button>
       </div>
+      <div id="results"></div>
       <div id="currentTurn">Current turn: -</div>
-      <div id="playerList">
-        <!-- Player cards will be injected here -->
-      </div>
     </section>
 
     <!-- Roll History Panel -->
