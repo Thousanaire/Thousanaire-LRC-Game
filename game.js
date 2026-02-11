@@ -33,10 +33,12 @@ document.getElementById("rollBtn").addEventListener("click", () => {
   }
 
   // Show dice images AND text outcomes
-  document.getElementById("dieDisplay").src = `assets/dice/${outcomes[0]}.png`;
+  const diceArea = document.getElementById("diceArea");
+  diceArea.innerHTML = renderDice(outcomes);
+
   document.getElementById("result").innerHTML =
-    players[currentPlayer] + " rolled: " + renderDice(outcomes) +
-    "<br>(" + outcomes.join(", ") + ")";
+    players[currentPlayer] + " rolled: " +
+    outcomes.join(", ");
 
   let wildRolled = false;
 
@@ -84,19 +86,18 @@ function renderDice(outcomes) {
   ).join(" ");
 }
 
-// Update player list panel
+// Update player slots with names and chips
 function updatePlayerList() {
-  const list = document.getElementById("playerList");
-  list.innerHTML = "";
   players.forEach((p, i) => {
-    const div = document.createElement("div");
-    div.className = "player" + (i === currentPlayer ? " active" : "");
-    div.innerHTML = `
-      <div class="name">${p}</div>
-      <div class="chips">Chips: ${chips[i]}</div>
-    `;
-    list.appendChild(div);
+    const playerDiv = document.getElementById("player" + i);
+    if (playerDiv) {
+      const nameDiv = playerDiv.querySelector(".name");
+      const chipsDiv = playerDiv.querySelector(".chips");
+      if (nameDiv) nameDiv.textContent = p;
+      if (chipsDiv) chipsDiv.textContent = `Chips: ${chips[i]}`;
+    }
   });
+  document.getElementById("centerPot").innerText = `Center Pot: ${centerPot}`;
   document.getElementById("currentTurn").innerText = `Current turn: ${players[currentPlayer]}`;
 }
 
@@ -118,10 +119,10 @@ function checkWinner() {
   }
 }
 
-// Highlight current player in list
+// Highlight current player’s avatar slot
 function highlightCurrentPlayer() {
-  const list = document.querySelectorAll("#playerList .player");
-  list.forEach((el, i) => {
+  const slots = document.querySelectorAll(".player");
+  slots.forEach((el, i) => {
     el.classList.toggle("active", i === currentPlayer);
   });
   document.getElementById("currentTurn").innerText = `Current turn: ${players[currentPlayer]}`;
@@ -164,7 +165,7 @@ function showStealOptions(rollerIndex) {
 
 // Add roll history
 function addHistory(player, outcomes) {
-  const historyDiv = document.getElementById("messages");
+  const historyDiv = document.getElementById("rollHistory");
   const entry = document.createElement("div");
   const time = new Date().toLocaleTimeString();
   entry.textContent = `${player}: ${outcomes.join(", ")} at ${time}`;
