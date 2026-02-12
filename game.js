@@ -4,19 +4,17 @@ let centerPot = 0;
 let currentPlayer = 0;
 let idleDiceInterval;
 
-let eliminated = [false, false, false, false];      // permanently out
-let danger = [false, false, false, false];          // 0 chips, waiting for next turn
+let eliminated = [false, false, false, false];
+let danger = [false, false, false, false];
 
-// logical seat order (clockwise)
 const logicalPositions = ["top", "right", "bottom", "left"];
-
-// domSeatForLogical[i] = DOM index of the player div for logical seat i
 let domSeatForLogical = [0, 1, 2, 3];
 
-// Build mapping from logical seats -> DOM seats based on .top/.right/.bottom/.left
+let playerAvatars = [null, null, null, null];
+let playerColors = [null, null, null, null];
+
 function initSeatMapping() {
   const playerDivs = document.querySelectorAll(".player");
-
   logicalPositions.forEach((pos, logicalIndex) => {
     playerDivs.forEach((div, domIndex) => {
       if (div.classList.contains(pos)) {
@@ -26,20 +24,30 @@ function initSeatMapping() {
   });
 }
 
-// Join game: players sit CLOCKWISE by join order
+function playSound(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.currentTime = 0;
+  el.play().catch(() => {});
+}
+
 document.getElementById("joinBtn").addEventListener("click", () => {
   const name = document.getElementById("nameInput").value.trim();
   if (!name) return;
 
-  // find first empty logical seat (0-3)
   let logicalSeat = players.findIndex(p => !p);
   if (logicalSeat === -1) logicalSeat = players.length;
   if (logicalSeat >= 4) return;
+
+  const avatar = document.getElementById("avatarSelect").value;
+  const color = document.getElementById("colorSelect").value;
 
   players[logicalSeat] = name;
   chips[logicalSeat] = 3;
   eliminated[logicalSeat] = false;
   danger[logicalSeat] = false;
+  playerAvatars[logicalSeat] = avatar;
+  playerColors[logicalSeat] = color;
 
   updateTable();
   document.getElementById("nameInput").value = "";
@@ -51,7 +59,15 @@ document.getElementById("joinBtn").addEventListener("click", () => {
   }
 });
 
-// LEFT = clockwise to next non-eliminated player
+document.getElementById("resetBtn").addEventListener("click", () => {
+  resetGame();
+});
+
+document.getElementById("playAgainBtn").addEventListener("click", () => {
+  resetGame();
+  hideGameOver();
+});
+
 function getLeftSeatIndex(seat) {
   let idx = seat;
   for (let i = 0; i < 4; i++) {
@@ -61,7 +77,6 @@ function getLeftSeatIndex(seat) {
   return seat;
 }
 
-// RIGHT = counter‑clockwise to next non-eliminated player
 function getRightSeatIndex(seat) {
   let idx = seat;
   for (let i = 0; i < 4; i++) {
@@ -71,10 +86,11 @@ function getRightSeatIndex(seat) {
   return seat;
 }
 
-// Roll dice
 document.getElementById("rollBtn").addEventListener("click", () => {
   if (players.length === 0) return;
   if (!players[currentPlayer] || eliminated[currentPlayer]) return;
+
+  playSound("sndRoll");
 
   let numDice = Math.min(chips[currentPlayer], 3);
   if (numDice === 0) {
@@ -82,7 +98,7 @@ document.getElementById("rollBtn").addEventListener("click", () => {
       players[currentPlayer] + " has no chips, skips turn.";
     addHistory(players[currentPlayer], ["Skipped turn (no chips)"]);
     danger[currentPlayer] = true;
-    nextTurn();
+    handleEndOfTurn();
     return;
   }
 
@@ -101,6 +117,7 @@ document.getElementById("rollBtn").addEventListener("click", () => {
       chips[leftSeat]++;
       danger[leftSeat] = false;
       animateChipTransfer(currentPlayer, leftSeat, "left");
+      playSound("sndChip");
     }
     else if (outcome === "Right" && chips[currentPlayer] > 0) {
       const rightSeat = getRightSeatIndex(currentPlayer);
@@ -109,12 +126,14 @@ document.getElementById("rollBtn").addEventListener("click", () => {
       chips[rightSeat]++;
       danger[rightSeat] = false;
       animateChipTransfer(currentPlayer, rightSeat, "right");
+      playSound("sndChip");
     }
     else if (outcome === "Center" && chips[currentPlayer] > 0) {
       chips[currentPlayer]--;
       if (chips[currentPlayer] === 0) danger[currentPlayer] = true;
       centerPot++;
       animateChipTransfer(currentPlayer, null, "center");
+      playSound("sndChip");
     }
     else if (outcome === "Wild") {
       wildCount++;
@@ -127,8 +146,7 @@ document.getElementById("rollBtn").addEventListener("click", () => {
   if (wildCount > 0) {
     handleWildSteals(currentPlayer, wildCount);
   } else {
-    checkWinner();
-    nextTurn();
+    handleEndOfTurn();
   }
 });
 
@@ -137,7 +155,6 @@ function rollDie() {
   return sides[Math.floor(Math.random() * sides.length)];
 }
 
-// Animate dice with CSS spin effect
 function animateDice(outcomes) {
   const diceArea = document.getElementById("diceArea");
   diceArea.innerHTML = renderDice(outcomes);
@@ -152,14 +169,12 @@ function animateDice(outcomes) {
   });
 }
 
-// Render dice images
 function renderDice(outcomes) {
   return outcomes.map(o =>
     `<img src="assets/dice/${o}.png" alt="${o}" class="die">`
   ).join(" ");
 }
 
-// Update board using logical->DOM mapping
 function updateTable() {
   for (let logicalSeat = 0; logicalSeat < 4; logicalSeat++) {
     const domIndex = domSeatForLogical[logicalSeat];
@@ -171,16 +186,27 @@ function updateTable() {
 
     const nameDiv = playerDiv.querySelector(".name");
     const chipsDiv = playerDiv.querySelector(".chips");
+    const avatarImg = playerDiv.querySelector(".avatar");
 
     playerDiv.classList.remove("eliminated");
+    playerDiv.classList.remove("active");
 
     if (!name) {
       if (nameDiv) nameDiv.textContent = "";
       if (chipsDiv) chipsDiv.textContent = "";
+      if (avatarImg) avatarImg.style.borderColor = "transparent";
       continue;
     }
 
     if (nameDiv) nameDiv.textContent = name;
+
+    if (playerAvatars[logicalSeat] && avatarImg) {
+      avatarImg.src = playerAvatars[logicalSeat];
+    }
+
+    if (playerColors[logicalSeat] && avatarImg) {
+      avatarImg.style.borderColor = playerColors[logicalSeat];
+    }
 
     if (eliminated[logicalSeat]) {
       playerDiv.classList.add("eliminated");
@@ -191,9 +217,9 @@ function updateTable() {
   }
 
   document.getElementById("centerPot").innerText = `Center Pot: ${centerPot}`;
+  highlightCurrentPlayer();
 }
 
-// FIXED TURN ROTATION with elimination logic
 function nextTurn() {
   if (players.length === 0) return;
 
@@ -205,7 +231,6 @@ function nextTurn() {
     attempts++;
 
     if (!players[next]) continue;
-
     if (eliminated[next]) continue;
 
     if (chips[next] === 0) {
@@ -226,18 +251,66 @@ function nextTurn() {
   highlightCurrentPlayer();
 }
 
-function checkWinner() {
-  let activePlayers = players.filter((p, i) => p && !eliminated[i]).length;
-  if (activePlayers === 1) {
-    let winnerIndex = players.findIndex((p, i) => p && !eliminated[i]);
+function activePlayerCount() {
+  return players.filter((p, i) => p && !eliminated[i]).length;
+}
+
+function getLastActivePlayerIndex(excludeIndex = null) {
+  let idx = -1;
+  players.forEach((p, i) => {
+    if (p && !eliminated[i] && i !== excludeIndex) idx = i;
+  });
+  return idx;
+}
+
+function handleEndOfTurn() {
+  const activeCount = activePlayerCount();
+
+  if (activeCount === 2 && chips[currentPlayer] === 0) {
+    const winnerIndex = getLastActivePlayerIndex(currentPlayer);
     if (winnerIndex !== -1) {
-      document.getElementById("results").innerText =
-        players[winnerIndex] + " wins the pot of " + centerPot + "!";
-      addHistory(players[winnerIndex], ["Winner!"]);
-      document.getElementById("rollBtn").disabled = true;
-      highlightCurrentPlayer();
+      showGameOver(winnerIndex);
+      return;
     }
   }
+
+  checkWinner();
+  if (!isGameOver()) {
+    nextTurn();
+  }
+}
+
+function isGameOver() {
+  return document.getElementById("rollBtn").disabled &&
+         !document.getElementById("gameOverOverlay").classList.contains("hidden");
+}
+
+function checkWinner() {
+  let activePlayers = activePlayerCount();
+  if (activePlayers === 1) {
+    let winnerIndex = getLastActivePlayerIndex(null);
+    if (winnerIndex !== -1) {
+      showGameOver(winnerIndex);
+    }
+  }
+}
+
+function showGameOver(winnerIndex) {
+  const overlay = document.getElementById("gameOverOverlay");
+  const text = document.getElementById("gameOverText");
+  const title = document.getElementById("gameOverTitle");
+
+  const winnerName = players[winnerIndex] || "Player";
+  title.textContent = "Game Over";
+  text.textContent = `${winnerName} wins the pot of ${centerPot} chips!`;
+
+  overlay.classList.remove("hidden");
+  document.getElementById("rollBtn").disabled = true;
+  playSound("sndWin");
+}
+
+function hideGameOver() {
+  document.getElementById("gameOverOverlay").classList.add("hidden");
 }
 
 function highlightCurrentPlayer() {
@@ -255,17 +328,16 @@ function highlightCurrentPlayer() {
 
   const domIndex = domSeatForLogical[currentPlayer];
   const activeDiv = document.getElementById("player" + domIndex);
-  if (activeDiv) activeDiv.classList.add('active');
+  if (activeDiv) {
+    activeDiv.classList.add('active');
+    const color = playerColors[currentPlayer] || "#ff4081";
+    activeDiv.style.boxShadow = `0 0 15px ${color}`;
+  }
 
   document.getElementById("currentTurn").textContent =
     "Current turn: " + (players[currentPlayer] || "-");
 }
 
-/*
-===========================================
-⭐ FLEXIBLE WILD STEAL LOGIC (Side Panel)
-===========================================
-*/
 function handleWildSteals(rollerIndex, wildCount) {
   const wildContent = document.getElementById("wildContent");
   const rollBtn = document.getElementById("rollBtn");
@@ -289,8 +361,7 @@ function handleWildSteals(rollerIndex, wildCount) {
     if (opponents.length === 0) {
       wildContent.innerHTML += `<p>No opponents have chips to steal.</p>`;
       rollBtn.disabled = false;
-      checkWinner();
-      nextTurn();
+      handleEndOfTurn();
       return;
     }
 
@@ -308,6 +379,7 @@ function handleWildSteals(rollerIndex, wildCount) {
           stealsRemaining--;
 
           animateChipTransfer(opponent.index, rollerIndex, "wild");
+          playSound("sndWild");
         }
 
         updateTable();
@@ -315,8 +387,7 @@ function handleWildSteals(rollerIndex, wildCount) {
         if (stealsRemaining <= 0) {
           wildContent.innerHTML = "";
           rollBtn.disabled = false;
-          checkWinner();
-          nextTurn();
+          handleEndOfTurn();
         } else {
           renderWildPanel();
         }
@@ -332,7 +403,6 @@ function pExists(i) {
   return typeof players[i] !== "undefined" && players[i] !== null;
 }
 
-// Add roll history
 function addHistory(player, outcomes) {
   const historyDiv = document.getElementById("rollHistory");
   const entry = document.createElement("div");
@@ -341,21 +411,13 @@ function addHistory(player, outcomes) {
   historyDiv.prepend(entry);
 }
 
-// Flying chip animation helpers
+/* CHIP ANIMATION HELPERS */
+
 function getSeatCenter(logicalSeat) {
   const domIndex = domSeatForLogical[logicalSeat];
   const el = document.getElementById("player" + domIndex);
   if (!el) return null;
-  const rect = el.getBoundingClientRect();
-  return {
-    x: rect.left + rect.width / 2,
-    y: rect.top + rect.height / 2
-  };
-}
 
-function getCenterPotCenter() {
-  const el = document.getElementById("centerPot");
-  if (!el) return null;
   const rect = el.getBoundingClientRect();
   return {
     x: rect.left + rect.width / 2,
@@ -372,7 +434,9 @@ function animateChipTransfer(fromSeat, toSeat, type) {
   }
 
   if (type === "center") {
-    toPos = getCenterPotCenter();
+    const pot = document.getElementById("centerPot");
+    const rect = pot.getBoundingClientRect();
+    toPos = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
   } else if (toSeat !== null && toSeat !== undefined) {
     toPos = getSeatCenter(toSeat);
   }
@@ -383,26 +447,52 @@ function animateChipTransfer(fromSeat, toSeat, type) {
   chip.className = "chip-fly";
   chip.style.left = fromPos.x + "px";
   chip.style.top = fromPos.y + "px";
+  chip.style.opacity = "1";
   chip.style.transform = "scale(1)";
 
   document.body.appendChild(chip);
 
   requestAnimationFrame(() => {
-    chip.style.left = toPos.x + "px";
-    chip.style.top = toPos.y + "px";
-    chip.style.transform = "scale(1.1)";
+    requestAnimationFrame(() => {
+      chip.style.left = toPos.x + "px";
+      chip.style.top = toPos.y + "px";
+      chip.style.transform = "scale(1.35)";
+    });
   });
 
   setTimeout(() => {
     chip.style.opacity = "0";
     chip.style.transform = "scale(0.7)";
-    setTimeout(() => {
-      if (chip.parentNode) chip.parentNode.removeChild(chip);
-    }, 200);
-  }, 350);
+    setTimeout(() => chip.remove(), 300);
+  }, 500);
 }
 
-// Show random dice faces at startup and refresh every 2s until game starts
+/* RESET GAME */
+
+function resetGame() {
+  centerPot = 0;
+  eliminated = [false, false, false, false];
+  danger = [false, false, false, false];
+
+  for (let i = 0; i < 4; i++) {
+    if (players[i]) {
+      chips[i] = 3;
+    } else {
+      chips[i] = 0;
+    }
+  }
+
+  currentPlayer = 0;
+  document.getElementById("rollBtn").disabled = false;
+  document.getElementById("results").textContent = "";
+  document.getElementById("rollHistory").innerHTML = "";
+  document.getElementById("wildContent").innerHTML = "";
+  hideGameOver();
+  updateTable();
+}
+
+/* STARTUP */
+
 function showRandomDice() {
   const diceArea = document.getElementById("diceArea");
   let randomFaces = [];
