@@ -1,10 +1,10 @@
 let players = [];
-let chips = [];
+let chips = [0, 0, 0, 0];
 let centerPot = 0;
 let currentPlayer = 0;
 let idleDiceInterval;
 
-// FIXED SEAT ORDER (clockwise)
+// FIXED CLOCKWISE SEATING ORDER
 // 0 = TOP, 1 = RIGHT, 2 = BOTTOM, 3 = LEFT
 const seatMap = [null, null, null, null];
 
@@ -17,8 +17,8 @@ document.getElementById("joinBtn").addEventListener("click", () => {
   if (seatIndex === -1) return; // table full
 
   seatMap[seatIndex] = name;
-  players.push(name);
-  chips.push(3);
+  players[seatIndex] = name;
+  chips[seatIndex] = 3;
 
   updateTable();
   document.getElementById("nameInput").value = "";
@@ -51,7 +51,7 @@ function getRightPlayer(playerName) {
 
 // Roll dice
 document.getElementById("rollBtn").addEventListener("click", () => {
-  if (players.length === 0) return;
+  if (players.filter(Boolean).length === 0) return;
 
   let numDice = Math.min(chips[currentPlayer], 3);
   if (numDice === 0) {
@@ -141,13 +141,13 @@ function renderDice(outcomes) {
 }
 
 function updateTable() {
-  players.forEach((p, i) => {
+  for (let i = 0; i < 4; i++) {
     const playerDiv = document.getElementById("player" + i);
-    if (playerDiv) {
-      playerDiv.querySelector(".name").textContent = p;
+    if (playerDiv && players[i]) {
+      playerDiv.querySelector(".name").textContent = players[i];
       playerDiv.querySelector(".chips").textContent = `Chips: ${chips[i]}`;
     }
-  });
+  }
   document.getElementById("centerPot").innerText = `Center Pot: ${centerPot}`;
 }
 
