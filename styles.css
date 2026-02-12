@@ -207,49 +207,12 @@ main {
   cursor: not-allowed;
 }
 
-/* RIGHT COLUMN (History + Wild Panel) */
+/* RIGHT COLUMN (Wild Panel ABOVE History) */
 #rightColumn {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
-
-/* Roll History Panel */
-#history {
-  background: #1e1e1e;
-  color: #fff;
-  padding: 1rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-/* Roll History Box — FIXED SIZE */
-#rollHistory {
-  background: #222;
-  color: #eee;
-  border-radius: 8px;
-  padding: 0.8rem;
-  overflow-y: auto;
-  height: 180px;
-  max-height: 180px;
-  margin-top: 0.5rem;
-  box-sizing: border-box;
-  border: 1px solid #333;
-}
-
-/* Roll History Entry Style */
-.history-entry {
-  padding: 6px 8px;
-  margin-bottom: 6px;
-  background: #333;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #ddd;
-  box-shadow: 0 0 4px rgba(255,64,129,0.3);
 }
 
 /* Wild Steal Panel */
@@ -266,10 +229,6 @@ main {
 #wildContent h3 {
   margin-top: 0;
   margin-bottom: 0.5rem;
-}
-
-#wildContent p {
-  margin: 0.25rem 0;
 }
 
 #wildContent button {
@@ -290,6 +249,30 @@ main {
   box-shadow: 0 0 10px rgba(255,64,129,0.7);
 }
 
+/* Roll History Panel */
+#history {
+  background: #1e1e1e;
+  color: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+#rollHistory {
+  background: #222;
+  color: #eee;
+  border-radius: 8px;
+  padding: 0.8rem;
+  overflow-y: auto;
+  height: 180px;
+  max-height: 180px;
+  margin-top: 0.5rem;
+  border: 1px solid #333;
+}
+
 /* Chat Box */
 #chat {
   width: 100%;
@@ -298,7 +281,6 @@ main {
   border-radius: 12px;
   padding: 1rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-  flex: none;
   box-sizing: border-box;
 }
 
@@ -311,7 +293,6 @@ main {
   border-radius: 8px;
   padding: 0.8rem;
   margin-bottom: 0.5rem;
-  box-sizing: border-box;
 }
 
 .chat-input {
@@ -336,17 +317,6 @@ main {
   border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
-}
-
-/* Optional chip steal animation hook */
-@keyframes stealPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.15); }
-  100% { transform: scale(1); }
-}
-
-.chip-steal {
-  animation: stealPulse 0.4s ease;
 }
 
 /* Responsive tweaks */
