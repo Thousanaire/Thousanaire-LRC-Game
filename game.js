@@ -30,6 +30,7 @@ document.getElementById("rollBtn").addEventListener("click", () => {
   if (numDice === 0) {
     document.getElementById("result").innerText =
       players[currentPlayer] + " has no chips, skips turn.";
+    addHistory(players[currentPlayer], ["Skipped turn (no chips)"]);
     nextTurn();
     return;
   }
@@ -136,6 +137,7 @@ function checkWinner() {
     let winnerIndex = chips.findIndex(c => c > 0);
     document.getElementById("result").innerText =
       players[winnerIndex] + " wins the pot of " + centerPot + "!";
+    addHistory(players[winnerIndex], ["Winner!"]);
     document.getElementById("rollBtn").disabled = true;
     highlightCurrentPlayer();
   }
@@ -166,18 +168,23 @@ function showWildStealOptions(rollerIndex, wildCount) {
 
     optionsDiv.innerHTML = `<p>Choose a player to steal a chip (${wildCount} Wild(s) left):</p>`;
     players.forEach((p, i) => {
-      if (i !== rollerIndex) {
+      if (i !== rollerIndex && chips[i] > 0) { // only show if opponent has chips
         const btn = document.createElement("button");
         btn.textContent = `Steal from ${p}`;
         btn.onclick = () => {
           chips[rollerIndex]++;
-          if (chips[i] > 0) chips[i]--; // can steal from 0, but no negative
+          chips[i]--; // guaranteed >0
           updatePlayerList();
+
+          // Log to history
           addHistory(players[rollerIndex], [`Wild → stole from ${p}`]);
+
+          // Announce in results panel
           document.getElementById("result").innerHTML +=
             `<br>${players[rollerIndex]} stole a chip from ${p}!`;
+
           wildCount--;
-          spendWild();
+          spendWild(); // prompt again until all Wilds are spent
         };
         optionsDiv.appendChild(btn);
       }
