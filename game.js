@@ -81,7 +81,6 @@ document.getElementById("rollBtn").addEventListener("click", () => {
     document.getElementById("results").innerText =
       players[currentPlayer] + " has no chips, skips turn.";
     addHistory(players[currentPlayer], ["Skipped turn (no chips)"]);
-    // mark danger if they have 0
     danger[currentPlayer] = true;
     nextTurn();
     return;
@@ -101,6 +100,7 @@ document.getElementById("rollBtn").addEventListener("click", () => {
       if (chips[currentPlayer] === 0) danger[currentPlayer] = true;
       chips[leftSeat]++;
       danger[leftSeat] = false;
+      animateChipTransfer(currentPlayer, leftSeat, "left");
     }
     else if (outcome === "Right" && chips[currentPlayer] > 0) {
       const rightSeat = getRightSeatIndex(currentPlayer);
@@ -108,11 +108,13 @@ document.getElementById("rollBtn").addEventListener("click", () => {
       if (chips[currentPlayer] === 0) danger[currentPlayer] = true;
       chips[rightSeat]++;
       danger[rightSeat] = false;
+      animateChipTransfer(currentPlayer, rightSeat, "right");
     }
     else if (outcome === "Center" && chips[currentPlayer] > 0) {
       chips[currentPlayer]--;
       if (chips[currentPlayer] === 0) danger[currentPlayer] = true;
       centerPot++;
+      animateChipTransfer(currentPlayer, null, "center");
     }
     else if (outcome === "Wild") {
       wildCount++;
@@ -207,19 +209,16 @@ function nextTurn() {
     if (eliminated[next]) continue;
 
     if (chips[next] === 0) {
-      // already in danger and still 0 -> eliminate
       if (danger[next]) {
         eliminated[next] = true;
         updateTable();
         continue;
       } else {
-        // mark danger and skip this turn
         danger[next] = true;
         continue;
       }
     }
 
-    // valid next player
     break;
   }
 
@@ -307,6 +306,8 @@ function handleWildSteals(rollerIndex, wildCount) {
           chips[rollerIndex]++;
           danger[rollerIndex] = false;
           stealsRemaining--;
+
+          animateChipTransfer(opponent.index, rollerIndex, "wild");
         }
 
         updateTable();
@@ -338,6 +339,67 @@ function addHistory(player, outcomes) {
   entry.classList.add("history-entry");
   entry.textContent = `${player} rolled: (${outcomes.join(", ")})`;
   historyDiv.prepend(entry);
+}
+
+// Flying chip animation helpers
+function getSeatCenter(logicalSeat) {
+  const domIndex = domSeatForLogical[logicalSeat];
+  const el = document.getElementById("player" + domIndex);
+  if (!el) return null;
+  const rect = el.getBoundingClientRect();
+  return {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2
+  };
+}
+
+function getCenterPotCenter() {
+  const el = document.getElementById("centerPot");
+  if (!el) return null;
+  const rect = el.getBoundingClientRect();
+  return {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2
+  };
+}
+
+function animateChipTransfer(fromSeat, toSeat, type) {
+  let fromPos = null;
+  let toPos = null;
+
+  if (fromSeat !== null && fromSeat !== undefined) {
+    fromPos = getSeatCenter(fromSeat);
+  }
+
+  if (type === "center") {
+    toPos = getCenterPotCenter();
+  } else if (toSeat !== null && toSeat !== undefined) {
+    toPos = getSeatCenter(toSeat);
+  }
+
+  if (!fromPos || !toPos) return;
+
+  const chip = document.createElement("div");
+  chip.className = "chip-fly";
+  chip.style.left = fromPos.x + "px";
+  chip.style.top = fromPos.y + "px";
+  chip.style.transform = "scale(1)";
+
+  document.body.appendChild(chip);
+
+  requestAnimationFrame(() => {
+    chip.style.left = toPos.x + "px";
+    chip.style.top = toPos.y + "px";
+    chip.style.transform = "scale(1.1)";
+  });
+
+  setTimeout(() => {
+    chip.style.opacity = "0";
+    chip.style.transform = "scale(0.7)";
+    setTimeout(() => {
+      if (chip.parentNode) chip.parentNode.removeChild(chip);
+    }, 200);
+  }, 350);
 }
 
 // Show random dice faces at startup and refresh every 2s until game starts
