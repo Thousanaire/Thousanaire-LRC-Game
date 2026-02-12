@@ -183,7 +183,7 @@ main {
   justify-content: center;
 }
 
-/* Roll history */
+/* RIGHT SIDE PANEL (History + Chat) */
 #history {
   flex: 1;
   background: #1e1e1e;
@@ -193,17 +193,34 @@ main {
   box-shadow: 0 4px 12px rgba(0,0,0,0.6);
   display: flex;
   flex-direction: column;
+  height: auto;
+  max-height: 500px;
+  box-sizing: border-box;
 }
 
+/* Roll History Box — FIXED SIZE */
 #rollHistory {
-  flex: none;
   background: #222;
   color: #eee;
   border-radius: 8px;
   padding: 0.8rem;
   overflow-y: auto;
-  height: 220px;
+  height: 180px;          /* NEW: smaller height */
+  max-height: 180px;      /* NEW: prevents overflow */
+  margin-top: 0.5rem;
   box-sizing: border-box;
+  border: 1px solid #333;
+}
+
+/* Roll History Entry Style */
+.history-entry {
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  background: #333;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #ddd;
+  box-shadow: 0 0 4px rgba(255,64,129,0.3);
 }
 
 /* Chat Box */
