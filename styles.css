@@ -1,8 +1,8 @@
 /* Global styles */
 body {
-  font-family: 'Trebuchet MS', Arial, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   margin: 0;
-  background: #000;
+  background: radial-gradient(circle at top, #151515 0%, #000 55%, #050509 100%);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -11,44 +11,48 @@ body {
 
 /* Header */
 header {
-  background: #111;
+  background: linear-gradient(135deg, #05040b, #111216);
   color: #fff;
-  padding: 1rem;
+  padding: 0.75rem 1.25rem;
   width: 100%;
-  text-align: center;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 header h1 {
-  margin: 0 0 0.5rem 0;
+  margin: 0;
+  font-size: clamp(1.4rem, 2vw, 1.8rem);
+  letter-spacing: 0.03em;
 }
 
 /* Join Game box */
 #joinGame {
-  background: #1e1e1e;
+  background: rgba(20, 20, 24, 0.95);
   color: #fff;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(255,64,129,0.4);
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   flex-wrap: wrap;
   justify-content: center;
+  border: 1px solid rgba(255,64,129,0.4);
 }
 
 #nameInput,
 #avatarSelect,
 #colorSelect {
-  padding: 0.3rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid #444;
-  font-size: 14px;
-  background: #222;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #333;
+  font-size: 0.85rem;
+  background: #141419;
   color: #fff;
 }
 
@@ -56,12 +60,12 @@ header h1 {
   background: linear-gradient(135deg, #ff4081, #7c4dff);
   color: #fff;
   border: none;
-  padding: 0.4rem 0.8rem;
+  padding: 0.4rem 0.9rem;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 999px;
   font-weight: bold;
-  transition: transform 0.2s, box-shadow 0.3s;
-  font-size: 14px;
+  transition: transform 0.2s, box-shadow 0.3s, background 0.3s;
+  font-size: 0.9rem;
 }
 
 #joinBtn:hover {
@@ -73,13 +77,25 @@ header h1 {
 main {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: center;
   align-items: flex-start;
   flex: 1;
   width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 1rem;
   box-sizing: border-box;
   gap: 1rem;
+}
+
+/* Global card-style for sections */
+section {
+  background: rgba(20, 20, 20, 0.9);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 18px 35px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 /* Game Board */
@@ -88,30 +104,43 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 1rem;
 }
 
-/* ⭐ Enhanced table styling */
+/* Remove extra card styling on these containers so inner cards stand out */
+#game,
+#rightColumn {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+}
+
+#game h2 {
+  align-self: flex-start;
+  margin: 0 0 0.75rem 0;
+}
+
+/* Game table */
 #table {
   display: grid;
   grid-template-areas:
     ". top ."
     "left center right"
     ". bottom .";
-  grid-template-columns: 100px 1fr 100px;
-  grid-template-rows: 100px 1fr 100px;
+  grid-template-columns: minmax(80px, 120px) 1fr minmax(80px, 120px);
+  grid-template-rows: minmax(80px, 120px) minmax(220px, 1fr) minmax(80px, 120px);
   align-items: center;
   justify-items: center;
   gap: 20px;
 
-  /* Soft felt-like background */
-  background: radial-gradient(circle at center, #111 0%, #000 80%);
-  border-radius: 20px;
-  padding: 20px;
+  background: radial-gradient(circle at center, #161616 0%, #050505 85%);
+  border-radius: 24px;
+  padding: clamp(16px, 3vw, 32px);
 
-  /* Subtle outer ring */
-  box-shadow:
-    0 0 0 3px rgba(255,64,129,0.25),
-    0 0 25px rgba(0,0,0,0.8);
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 4 / 3;
+  margin: 0 auto;
 }
 
 /* Player positions */
@@ -130,7 +159,8 @@ main {
 
 .player.active {
   border-radius: 12px;
-  transform: scale(1.08);
+  transform: scale(1.05);
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.6);
 }
 
 .player.eliminated {
@@ -146,10 +176,10 @@ main {
   color: #888;
 }
 
-/* ⭐ Tiny shadow under avatars */
+/* Avatars */
 .avatar {
-  width: 80px;
-  height: 80px;
+  width: clamp(56px, 7vw, 80px);
+  height: clamp(56px, 7vw, 80px);
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 5px;
@@ -177,7 +207,7 @@ main {
   position: relative;
 }
 
-/* ⭐ Soft spotlight behind dice */
+/* Soft spotlight behind dice */
 #centerArea::before {
   content: "";
   position: absolute;
@@ -198,8 +228,8 @@ main {
 }
 
 .die {
-  width: 80px;
-  height: 80px;
+  width: clamp(56px, 6vw, 80px);
+  height: clamp(56px, 6vw, 80px);
   transition: transform 0.6s ease;
 }
 
@@ -239,12 +269,12 @@ main {
   background: linear-gradient(135deg, #ff4081, #7c4dff);
   color: #fff;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.55rem 1.1rem;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 999px;
   font-weight: bold;
-  transition: transform 0.2s, box-shadow 0.3s;
-  font-size: 14px;
+  transition: transform 0.2s, box-shadow 0.3s, background 0.3s;
+  font-size: 0.9rem;
 }
 
 #rollBtn:hover,
@@ -258,12 +288,19 @@ main {
   cursor: not-allowed;
 }
 
+/* Current turn text */
+#currentTurn {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
 /* RIGHT COLUMN */
 #rightColumn {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 /* Wild Steal Panel */
@@ -278,14 +315,20 @@ main {
   font-size: 12px;
 }
 
-#wildPanel h2 {
-  font-size: 14px;
+#wildPanel h2,
+#history h2,
+#chat h2 {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.4rem;
+  color: #f5f5f5;
 }
 
 #wildContent button {
   margin: 4px;
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
   background: linear-gradient(135deg, #ff4081, #7c4dff);
   color: white;
   border: none;
@@ -313,20 +356,16 @@ main {
   font-size: 12px;
 }
 
-#history h2 {
-  font-size: 14px;
-}
-
 #rollHistory {
-  background: #222;
+  background: #15151a;
   color: #eee;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 0.8rem;
   overflow-y: auto;
   height: 180px;
   max-height: 180px;
   margin-top: 0.5rem;
-  border: 1px solid #333;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   font-size: 12px;
 }
 
@@ -343,7 +382,7 @@ main {
 /* Chat Box */
 #chat {
   width: 100%;
-  margin-top: 1rem;
+  margin-top: 0.25rem;
   background: #1e1e1e;
   border-radius: 12px;
   padding: 1rem;
@@ -356,19 +395,16 @@ main {
   font-size: 12px;
 }
 
-#chat h2 {
-  font-size: 14px;
-}
-
 #chatMessages {
   flex: 1;
   overflow-y: auto;
-  background: #222;
+  background: #15151a;
   color: #eee;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 0.8rem;
   margin-bottom: 0.5rem;
   font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .chat-input {
@@ -380,9 +416,9 @@ main {
 #chatInput {
   flex: 1;
   padding: 0.5rem;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid #444;
-  background: #222;
+  background: #141419;
   color: #fff;
   margin-right: 0.5rem;
   font-size: 12px;
@@ -390,11 +426,12 @@ main {
 
 #sendBtn {
   background: linear-gradient(135deg, #ff4081, #7c4dff);
-  padding: 0.5rem 1rem;
+  padding: 0.55rem 1.1rem;
   border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
   font-size: 12px;
+  border: none;
 }
 
 /* Flying chip animation */
@@ -456,7 +493,7 @@ main {
   background: linear-gradient(135deg, #ff4081, #7c4dff);
   color: #fff;
   border: none;
-  padding: 0.5rem 1.2rem;
+  padding: 0.55rem 1.2rem;
   border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
@@ -466,33 +503,37 @@ main {
 @media (max-width: 900px) {
   main {
     flex-direction: column;
-  }
-
-  #rightColumn {
-    width: 100%;
-    order: 3;
+    align-items: stretch;
+    max-width: 100%;
   }
 
   #game {
     order: 1;
+    padding: 0.75rem;
   }
 
-  #chat {
-    order: 4;
+  #rightColumn {
+    width: 100%;
+    order: 2;
   }
 
   #table {
-    grid-template-columns: 80px 1fr 80px;
-    grid-template-rows: 80px 1fr 80px;
+    max-width: none;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    grid-template-columns: 70px 1fr 70px;
+    grid-template-rows: 70px 1fr 70px;
+  }
+}
+
+@media (min-width: 1100px) {
+  #rollHistory {
+    height: 220px;
+    max-height: 220px;
   }
 
-  .avatar {
-    width: 64px;
-    height: 64px;
-  }
-
-  .die {
-    width: 64px;
-    height: 64px;
+  #chat {
+    height: 220px;
+    max-height: 220px;
   }
 }
