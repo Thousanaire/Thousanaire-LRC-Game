@@ -123,7 +123,7 @@ document.getElementById("rollBtn").addEventListener("click", () => {
 });
 
 function rollDie() {
-  const sides = ["Left", "Right", "Center", "Dottt", "Wild"];
+  const sides = ["Left", "Right", "Hub", "Dottt", "Wild"];
   return sides[Math.floor(Math.random() * sides.length)];
 }
 
@@ -189,7 +189,7 @@ function updateTable() {
     }
   }
 
-  document.getElementById("centerPot").innerText = `Center Pot: ${centerPot}`;
+  document.getElementById("centerPot").innerText = `Hub Pot: ${centerPot}`;
   highlightCurrentPlayer();
 }
 
@@ -286,7 +286,7 @@ function showGameOver(winnerIndex) {
 
   const winnerName = players[winnerIndex] || "Player";
   title.textContent = "🏆 GAME OVER 🏆";
-  text.textContent = `${winnerName} is the LAST MAN STANDING!\nWins ${centerPot} chips from center pot!`;
+  text.textContent = `${winnerName} is the LAST MAN STANDING!\nWins ${centerPot} chips from hub pot!`;
 
   overlay.classList.remove("hidden");
   document.getElementById("rollBtn").disabled = true;
@@ -335,13 +335,13 @@ function openWildChoicePanel(playerIndex, outcomes) {
   const wildIndices = [];
   const leftIndices = [];
   const rightIndices = [];
-  const centerIndices = [];
+  const hubIndices = [];
 
   outcomes.forEach((o, i) => {
     if (o === "Wild") wildIndices.push(i);
     else if (o === "Left") leftIndices.push(i);
     else if (o === "Right") rightIndices.push(i);
-    else if (o === "Center") centerIndices.push(i);
+    else if (o === "Hub") hubIndices.push(i);
   });
 
   const wildCount = wildIndices.length;
@@ -363,7 +363,7 @@ function openWildChoicePanel(playerIndex, outcomes) {
       <h3 style="color: gold;">🎲 ${players[playerIndex]} rolled TRIPLE WILDS! 🎲</h3>
       <p style="font-size: 1.1em;">Choose your epic reward:</p>
       <button id="takePotBtn3" style="font-size: 1.3em; padding: 20px; margin: 10px; background: #4CAF50;">
-        💰 Take center pot (${centerPot} chips)
+        💰 Take hub pot (${centerPot} chips)
       </button>
       <button id="steal3Btn" style="font-size: 1.3em; padding: 20px; margin: 10px; background: #FF9800;">
         ⚔️ Steal 3 chips from players
@@ -374,7 +374,7 @@ function openWildChoicePanel(playerIndex, outcomes) {
       chips[playerIndex] += centerPot;
       centerPot = 0;
       document.getElementById("results").innerText =
-        `${players[playerIndex]} takes the entire center pot! 💰`;
+        `${players[playerIndex]} takes the entire hub pot! 💰`;
       updateTable();
       wildContent.innerHTML = "";
       rollBtn.disabled = false;
@@ -388,7 +388,7 @@ function openWildChoicePanel(playerIndex, outcomes) {
   }
 
   // Case 3: 1-2 Wilds - normal immediate flow
-  handleWildsNormalFlow(playerIndex, outcomes, wildIndices, leftIndices, rightIndices, centerIndices);
+  handleWildsNormalFlow(playerIndex, outcomes, wildIndices, leftIndices, rightIndices, hubIndices);
 }
 
 function handleThreeWildSteals(playerIndex) {
@@ -477,7 +477,7 @@ function handleThreeWildSteals(playerIndex) {
   renderStealPanel();
 }
 
-function handleWildsNormalFlow(playerIndex, outcomes, wildIndices, leftIndices, rightIndices, centerIndices) {
+function handleWildsNormalFlow(playerIndex, outcomes, wildIndices, leftIndices, rightIndices, hubIndices) {
   const wildContent = document.getElementById("wildContent");
   const rollBtn = document.getElementById("rollBtn");
 
@@ -506,7 +506,7 @@ function handleWildsNormalFlow(playerIndex, outcomes, wildIndices, leftIndices, 
     const cancelActions = [
       {label: "Left", indices: leftIndices},
       {label: "Right", indices: rightIndices},
-      {label: "Center", indices: centerIndices}
+      {label: "Hub", indices: hubIndices}
     ];
 
     cancelActions.forEach(({label, indices}) => {
@@ -589,11 +589,11 @@ function applyOutcomesOnly(playerIndex, outcomes) {
       danger[rightSeat] = false;
       animateChipTransfer(playerIndex, rightSeat, "right");
       playSound("sndChip");
-    } else if (o === "Center" && chips[playerIndex] > 0) {
+    } else if (o === "Hub" && chips[playerIndex] > 0) {
       chips[playerIndex]--;
       if (chips[playerIndex] === 0) danger[playerIndex] = true;
       centerPot++;
-      animateChipTransfer(playerIndex, null, "center");
+      animateChipTransfer(playerIndex, null, "hub");
       playSound("sndChip");
     }
   });
@@ -623,11 +623,11 @@ function applyWildAndOutcomes(playerIndex, outcomes, wildData) {
       danger[rightSeat] = false;
       animateChipTransfer(playerIndex, rightSeat, "right");
       playSound("sndChip");
-    } else if (o === "Center" && chips[playerIndex] > 0) {
+    } else if (o === "Hub" && chips[playerIndex] > 0) {
       chips[playerIndex]--;
       if (chips[playerIndex] === 0) danger[playerIndex] = true;
       centerPot++;
-      animateChipTransfer(playerIndex, null, "center");
+      animateChipTransfer(playerIndex, null, "hub");
       playSound("sndChip");
     }
   });
@@ -665,7 +665,7 @@ function animateChipTransfer(fromSeat, toSeat, type) {
     fromPos = getSeatCenter(fromSeat);
   }
 
-  if (type === "center") {
+  if (type === "hub") {
     const pot = document.getElementById("centerPot");
     const rect = pot.getBoundingClientRect();
     toPos = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
