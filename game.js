@@ -1,5 +1,5 @@
 /* ============================================================
-   CLEAN INTRO — IMAGE + VOICE ONLY + SUBTLE FLOAT
+   CLEAN INTRO — IMAGE + VOICE ONLY + SUBTLE FLOAT (FIXED)
    ============================================================ */
 
 function startIntroOverlay() {
@@ -9,38 +9,78 @@ function startIntroOverlay() {
   const voice = document.getElementById("introVoice");
   const avatar = document.querySelector(".intro-avatar");
 
-  if (!overlay || !skipBtn || !enterBtn || !voice || !avatar) return;
+  console.log("Intro elements found:", { overlay, skipBtn, enterBtn, voice, avatar });
+
+  if (!overlay || !skipBtn || !enterBtn || !voice || !avatar) {
+    console.error("Missing intro elements!");
+    overlay?.style.display = "none";
+    return;
+  }
 
   // Subtle idle float animation (CSS-driven)
   avatar.classList.add("idle-float");
 
-  // Mobile audio unlock
-  overlay.addEventListener(
-    "click",
-    () => {
-      if (voice.paused) {
-        voice.currentTime = 0;
-        voice.play().catch(() => {});
-      }
-    },
-    { once: true }
-  );
+  let audioUnlocked = false;
+  let introEnded = false;
 
   function endIntro() {
+    if (introEnded) return;
+    introEnded = true;
+    
+    console.log("Ending intro");
     voice.pause();
     voice.currentTime = 0;
     overlay.style.display = "none";
   }
 
-  skipBtn.addEventListener("click", endIntro);
-  enterBtn.addEventListener("click", endIntro);
+  function unlockAndPlayAudio() {
+    if (audioUnlocked || voice.ended || introEnded) return;
+    
+    audioUnlocked = true;
+    console.log("User gesture detected - playing audio");
+    voice.currentTime = 0;
+    voice.play().catch(e => {
+      console.error("Audio play failed:", e);
+    });
+  }
 
-  // Start audio
-  voice.play().catch(() => {});
+  // FIXED BUTTONS - Skip/Enter ALWAYS work immediately
+  skipBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    endIntro();
+  });
+  
+  enterBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    endIntro();
+  });
+
+  // FIXED OVERLAY CLICK - Click anywhere except buttons to start audio
+  overlay.addEventListener("click", (e) => {
+    if (e.target.id === "introSkipBtn" || e.target.id === "introEnterBtn") return;
+    unlockAndPlayAudio();
+  });
+
+  // Initial attempt (will fail on most browsers - that's normal)
+  setTimeout(() => {
+    voice.play().catch(() => {
+      console.log("Autoplay blocked (normal) - click to start audio");
+    });
+  }, 250);
+
+  // Auto-skip if audio fails completely after 10s
+  setTimeout(() => {
+    if (!audioUnlocked && !introEnded) {
+      console.log("Auto-skipping intro after 10s");
+      endIntro();
+    }
+  }, 10000);
 }
 
 /* ============================================================
-   YOUR EXISTING GAME CODE
+   YOUR EXISTING GAME CODE (WITH 5-SECOND GAME OVER DELAYS)
    ============================================================ */
 
 let players = [];          // logical seats: 0=TOP,1=RIGHT,2=BOTTOM,3=LEFT
@@ -211,101 +251,4 @@ function updateTable() {
   for (let logicalSeat = 0; logicalSeat < 4; logicalSeat++) {
     const domIndex = domSeatForLogical[logicalSeat];
     const playerDiv = document.getElementById("player" + domIndex);
-    if (!playerDiv) continue;
-
-    const name = players[logicalSeat];
-    const chipCount = chips[logicalSeat] ?? 0;
-
-    const nameDiv = playerDiv.querySelector(".name");
-    const chipsDiv = playerDiv.querySelector(".chips");
-    const avatarImg = playerDiv.querySelector(".avatar");
-
-    playerDiv.classList.remove("eliminated");
-    playerDiv.classList.remove("active");
-    playerDiv.style.boxShadow = "none";
-
-    if (!name) {
-      if (nameDiv) nameDiv.textContent = "";
-      if (chipsDiv) chipsDiv.textContent = "";
-      if (avatarImg) avatarImg.style.borderColor = "transparent";
-      continue;
-    }
-
-    if (nameDiv) nameDiv.textContent = name;
-
-    if (playerAvatars[logicalSeat] && avatarImg) {
-      avatarImg.src = playerAvatars[logicalSeat];
-    }
-
-    if (playerColors[logicalSeat] && avatarImg) {
-      avatarImg.style.borderColor = playerColors[logicalSeat];
-    }
-
-    if (eliminated[logicalSeat]) {
-      playerDiv.classList.add("eliminated");
-      if (chipsDiv) chipsDiv.textContent = "Eliminated";
-    } else {
-      if (chipsDiv) chipsDiv.textContent = `Chips: ${chipCount}`;
-    }
-  }
-
-  document.getElementById("centerPot").innerText = `Hub Pot: ${centerPot}`;
-  highlightCurrentPlayer();
-}
-
-function nextTurn() {
-  if (players.length === 0) return;
-
-  let attempts = 0;
-  let next = currentPlayer;
-
-  while (attempts < 10) {
-    next = (next + 1) % 4;
-    attempts++;
-
-    if (!players[next]) continue;
-    if (eliminated[next]) continue;
-
-    if (chips[next] === 0) {
-      if (danger[next]) {
-        eliminated[next] = true;
-        document.getElementById("results").innerText = 
-          `${players[next]} had no chips after grace turn - ELIMINATED!`;
-        updateTable();
-        playSound("sndWild");
-        continue;
-      } else {
-        danger[next] = true;
-        document.getElementById("results").innerText = 
-          `${players[next]} has 0 chips - one grace turn given!`;
-        continue;
-      }
-    }
-
-    break;
-  }
-
-  currentPlayer = next;
-  highlightCurrentPlayer();
-}
-
-function activePlayerCount() {
-  return players.filter((p, i) => p && !eliminated[i]).length;
-}
-
-function getLastActivePlayerIndex(excludeIndex = null) {
-  let idx = -1;
-  players.forEach((p, i) => {
-    if (p && !eliminated[i] && i !== excludeIndex) idx = i;
-  });
-  return idx;
-}
-
-function handleEndOfTurn() {
-  const activeCount = activePlayerCount();
-
-  if (activeCount === 2 && chips[currentPlayer] === 0) {
-    const winnerIndex = getLastActivePlayerIndex(currentPlayer);
-    if (winnerIndex !== -1) {
-      document.getElementById("results").innerText = 
-        `${players[currentPlayer]} has 0 chips
+   
