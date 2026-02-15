@@ -58,6 +58,9 @@ let domSeatForLogical = [0, 1, 2, 3];
 let playerAvatars = [null, null, null, null];
 let playerColors = [null, null, null, null];
 
+// NEW: track if game has started (first valid roll done)
+let gameStarted = false;
+
 function initSeatMapping() {
   const playerDivs = document.querySelectorAll(".player");
   logicalPositions.forEach((pos, logicalIndex) => {
@@ -134,8 +137,8 @@ function getRightSeatIndex(seat) {
 document.getElementById("rollBtn").addEventListener("click", () => {
   const resultsEl = document.getElementById("results");
 
-  // REQUIRE 4 PLAYERS MINIMUM
-  if (activePlayerCount() < 4) {
+  // REQUIRE 4 PLAYERS ONLY BEFORE GAME START
+  if (!gameStarted && activePlayerCount() < 4) {
     if (resultsEl) {
       resultsEl.innerText = "4 players are required to start the game.";
     }
@@ -144,6 +147,9 @@ document.getElementById("rollBtn").addEventListener("click", () => {
 
   if (players.length === 0) return;
   if (!players[currentPlayer] || eliminated[currentPlayer]) return;
+
+  // From here, consider the game started
+  gameStarted = true;
 
   playSound("sndRoll");
 
@@ -753,6 +759,7 @@ function resetGame() {
   centerPot = 0;
   eliminated = [false, false, false, false];
   danger = [false, false, false, false];
+  gameStarted = false; // allow enforcing 4 players again on next game
 
   for (let i = 0; i < 4; i++) {
     if (players[i]) {
@@ -791,4 +798,3 @@ document.addEventListener("DOMContentLoaded", () => {
   idleDiceInterval = setInterval(showRandomDice, 2000);
   startIntroOverlay();
 });
-
