@@ -1,107 +1,99 @@
 /* ============================================================
-   INTRO AVATAR + TYPEWRITER + MOBILE-SAFE VOICE-OVER
+   INTRO AVATAR + TYPEWRITER + MP3 VOICE-OVER
    ============================================================ */
 
-// Lines the avatar will type + speak
 const introLines = [
-  "Welcome to THOUSANAIRE: LEFT HUB RIGHT Wild.",
-  "Each player starts with 3 chips.",
-  "On your turn, you roll up to 3 dice — one for each chip you have.",
-  "LEFT gives a chip to the player on your left.",
-  "RIGHT gives a chip to the player on your right.",
-  "HUB sends a chip to the center pot.",
-  "WILD lets you cancel a result or steal chips, depending on how many you roll.",
-  "Last player with chips wins the hub pot. Good luck, Thousanaire."
+  "🎉 Welcome to THOUSANAIRE: LEFT HUB RIGHT Wild! 🎉",
+  "",
+  "Ready to play? Here’s how it goes! Every player starts with three chips.",
+  "",
+  "On your turn, roll up to three dice — one for each chip you have.",
+  "In later rounds, you can still roll up to three dice, but only as many as the chips you’ve got!",
+  "(Two chips? Two dice. One chip? One die. Four chips? Still just three — that’s the max!)",
+  "",
+  "Roll LEFT? Pass a chip to the player on your left.",
+  "Roll RIGHT? Give one to your right.",
+  "Roll HUB? Drop a chip into the center pot — the hub!",
+  "",
+  "Roll a DOT, and you’re safe — you keep your chip.",
+  "",
+  "Roll a WILD, and things get exciting!",
+  "You can cancel a result or steal chips — and if you roll three WILDs, you take the entire hub pot!",
+  "",
+  "Players with zero chips must sit tight —",
+  "but if a full round passes and you still haven’t gained any chips… you’re eliminated! 💥",
+  "",
+  "Keep rolling, keep laughing, and when only one player still has chips...",
+  "",
+  "That player is the Thousanaire Champion! 🎉",
+  "",
+  "Good luck, players — let’s roll!"
 ];
-
-// Mobile browsers block speech until user interacts
-let speechUnlocked = false;
-
-function unlockSpeech() {
-  if (!speechUnlocked) {
-    speechUnlocked = true;
-    if (window.speechSynthesis && window.speechSynthesis.resume) {
-      try {
-        window.speechSynthesis.resume();
-      } catch (e) {}
-    }
-  }
-}
-
-// Speak a line out loud (slower + clearer)
-function speakLine(text) {
-  if (!window.speechSynthesis || !speechUnlocked) return;
-
-  window.speechSynthesis.cancel();
-
-  const utter = new SpeechSynthesisUtterance(text);
-
-  // Slow, clear, natural pacing
-  utter.rate = 0.82;
-  utter.pitch = 1;
-  utter.volume = 1;
-
-  // (Optional hook for pause after line)
-  utter.onend = () => {
-    setTimeout(() => {}, 350);
-  };
-
-  const voices = window.speechSynthesis.getVoices
-    ? window.speechSynthesis.getVoices()
-    : [];
-
-  if (voices.length > 0) {
-    const preferred = voices.find(v =>
-      v.name.includes("Female") ||
-      v.name.includes("Google") ||
-      v.name.includes("Microsoft")
-    );
-    utter.voice = preferred || voices[0];
-  }
-
-  window.speechSynthesis.speak(utter);
-}
 
 function startIntroOverlay() {
   const overlay = document.getElementById("introOverlay");
-  if (!overlay) return;
-
   const textEl = document.getElementById("introText");
   const skipBtn = document.getElementById("introSkipBtn");
   const enterBtn = document.getElementById("introEnterBtn");
+  const voice = document.getElementById("introVoice");
+  const avatar = document.querySelector(".intro-avatar");
+  const mouth = document.getElementById("avatarMouth");
 
-  if (!textEl || !skipBtn || !enterBtn) return;
+  if (!overlay || !textEl || !skipBtn || !enterBtn || !voice || !avatar || !mouth) return;
 
   let lineIndex = 0;
   let charIndex = 0;
   let typing = true;
   let typingTimeout = null;
+  let mouthInterval = null;
 
-  // Unlock speech on first tap anywhere on overlay (mobile requirement)
-  overlay.addEventListener("click", unlockSpeech, { once: true });
+  // Mobile: first tap unlocks audio
+  overlay.addEventListener(
+    "click",
+    () => {
+      if (voice.paused) {
+        voice.currentTime = 0;
+        voice.play().catch(() => {});
+      }
+    },
+    { once: true }
+  );
+
+  voice.addEventListener("play", () => {
+    avatar.classList.add("talking");
+    mouthInterval = setInterval(() => {
+      mouth.style.opacity = mouth.style.opacity === "1" ? "0" : "1";
+    }, 120);
+  });
+
+  voice.addEventListener("pause", stopTalking);
+  voice.addEventListener("ended", stopTalking);
+
+  function stopTalking() {
+    avatar.classList.remove("talking");
+    if (mouthInterval) {
+      clearInterval(mouthInterval);
+      mouthInterval = null;
+    }
+    mouth.style.opacity = "0";
+  }
 
   function typeNextChar() {
     if (!typing) return;
 
     const line = introLines[lineIndex] || "";
-
-    // Speak line when starting it (only after user taps)
-    if (charIndex === 0 && speechUnlocked) {
-      speakLine(line);
-    }
-
     textEl.textContent = line.slice(0, charIndex);
 
     if (charIndex < line.length) {
       charIndex++;
-      typingTimeout = setTimeout(typeNextChar, 38); // slightly slower typing
+      typingTimeout = setTimeout(typeNextChar, 38);
     } else {
       if (lineIndex < introLines.length - 1) {
         typingTimeout = setTimeout(() => {
           lineIndex++;
           charIndex = 0;
           typeNextChar();
-        }, 950); // pause between lines
+        }, 950);
       } else {
         enterBtn.style.display = "inline-block";
       }
@@ -110,30 +102,23 @@ function startIntroOverlay() {
 
   function endIntro() {
     typing = false;
-    if (window.speechSynthesis) {
-      try {
-        window.speechSynthesis.cancel();
-      } catch (e) {}
-    }
     if (typingTimeout) clearTimeout(typingTimeout);
+
+    voice.pause();
+    voice.currentTime = 0;
+    stopTalking();
+
     overlay.style.display = "none";
   }
 
-  skipBtn.addEventListener("click", () => {
-    unlockSpeech();
-    endIntro();
-  });
-
-  enterBtn.addEventListener("click", () => {
-    unlockSpeech();
-    endIntro();
-  });
+  skipBtn.addEventListener("click", endIntro);
+  enterBtn.addEventListener("click", endIntro);
 
   typeNextChar();
 }
 
 /* ============================================================
-   ORIGINAL GAME CODE
+   YOUR EXISTING GAME CODE
    ============================================================ */
 
 let players = [];          // logical seats: 0=TOP,1=RIGHT,2=BOTTOM,3=LEFT
@@ -866,9 +851,10 @@ function showRandomDice() {
   });
 }
 
+/* Single DOMContentLoaded: game init + intro */
 document.addEventListener("DOMContentLoaded", () => {
   initSeatMapping();
   showRandomDice();
   idleDiceInterval = setInterval(showRandomDice, 2000);
-  startIntroOverlay(); // start avatar intro once DOM is ready
+  startIntroOverlay();
 });
