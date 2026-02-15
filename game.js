@@ -1,5 +1,5 @@
 /* ============================================================
-   CLEAN INTRO — IMAGE + VOICE ONLY + SUBTLE FLOAT (ROBUST)
+   CLEAN INTRO — IMAGE + VOICE ONLY + SUBTLE FLOAT
    ============================================================ */
 
 function startIntroOverlay() {
@@ -140,7 +140,7 @@ document.getElementById("rollBtn").addEventListener("click", () => {
   /* ============================================================
      REQUIRE 4 PLAYERS ONLY BEFORE FIRST ROLL
      ============================================================ */
-  const active = players.filter((p, i) => p && !eliminated[i]).length;
+  const active = activePlayerCount();
   const isFirstRoll = centerPot === 0 && chips.every(c => c === 3);
 
   if (active < 4 && isFirstRoll) {
@@ -511,13 +511,4 @@ function handleThreeWildSteals(playerIndex) {
   function performSteal(fromIndex, count) {
     if (stealsRemaining < count) return;
     
-    const actualCount = Math.min(count, chips[fromIndex]);
-    for (let i = 0; i < actualCount; i++) {
-      chips[fromIndex]--;
-      chips[playerIndex]++;
-      animateChipTransfer(fromIndex, playerIndex, "wild");
-      playSound("sndWild");
-    }
-    
-    if (chips[fromIndex] === 0) danger[fromIndex] = true;
-    danger
+    const actualCount = Math
