@@ -9,16 +9,17 @@ function startIntroOverlay() {
   const voice = document.getElementById("introVoice");
   const avatar = document.querySelector(".intro-avatar");
 
-  if (!overlay || !skipBtn || !enterBtn || !voice || !avatar) return;
+  // FIXED: Only require overlay, not all elements
+  if (!overlay) return;
 
   // Subtle idle float animation (CSS-driven)
-  avatar.classList.add("idle-float");
+  if (avatar) avatar.classList.add("idle-float");
 
   // Mobile audio unlock
   overlay.addEventListener(
     "click",
     () => {
-      if (voice.paused) {
+      if (voice && voice.paused) {
         voice.currentTime = 0;
         voice.play().catch(() => {});
       }
@@ -27,16 +28,18 @@ function startIntroOverlay() {
   );
 
   function endIntro() {
-    voice.pause();
-    voice.currentTime = 0;
+    if (voice) {
+      voice.pause();
+      voice.currentTime = 0;
+    }
     overlay.style.display = "none";
   }
 
-  skipBtn.addEventListener("click", endIntro);
-  enterBtn.addEventListener("click", endIntro);
+  if (skipBtn) skipBtn.addEventListener("click", endIntro);
+  if (enterBtn) enterBtn.addEventListener("click", endIntro);
 
   // Start audio
-  voice.play().catch(() => {});
+  if (voice) voice.play().catch(() => {});
 }
 
 /* ============================================================
@@ -508,10 +511,4 @@ function handleThreeWildSteals(playerIndex) {
   }
 
   function performSteal(fromIndex, count) {
-    if (stealsRemaining < count) return;
-    
-    const actualCount = Math.min(count, chips[fromIndex]);
-    for (let i = 0; i < actualCount; i++) {
-      chips[fromIndex]--;
-      chips[playerIndex]++;
-      animateChipTransfer(fromIndex, playerIndex, "
+    if (stealsRemaining
