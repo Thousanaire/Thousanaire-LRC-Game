@@ -31,6 +31,11 @@
   <!-- HEADER -->
   <header>
     <h1>Thousanaire: LEFT HUB RIGHT Wild</h1>
+    
+    <!-- MODE TOGGLE BUTTON -->
+    <div id="modeToggle" class="mode-toggle">
+      <button id="modeSwitchBtn">Dealer Mode</button>
+    </div>
 
     <div id="joinGame">
       <input type="text" id="nameInput" placeholder="Enter your name" aria-label="Enter your name">
@@ -56,7 +61,7 @@
   <main>
     <!-- GAME BOARD -->
     <section id="game">
-      <h2>GAME BOARD</h2>
+      <h2 id="gameModeTitle">GAME BOARD (Classic Mode)</h2>
 
       <div id="table">
         <!-- TOP PLAYER -->
@@ -81,7 +86,21 @@
             <img src="assets/dice/die3.png" class="die" id="die3" alt="Die 3">
           </div>
 
-          <div id="centerPot">Hub Pot: 0</div>
+          <!-- CLASSIC POT DISPLAY -->
+          <div id="classicPot" class="pot-display active">
+            <div>Hub Pot: <span id="classicPotCount">0</span></div>
+          </div>
+
+          <!-- DEALER MODE DISPLAY -->
+          <div id="dealerPot" class="pot-display hidden">
+            <div>Dealer Pot: <span id="dealerPotCount">0</span>/15</div>
+            <div>Rage Meter: <span id="rageCount">0</span>/15</div>
+            <div class="twist-badges">
+              <span class="twist-badge triple-wild">3★ WIN</span>
+              <span class="twist-badge triple-h">3H LOSS</span>
+              <span class="twist-badge gamble">2H+★ FLIP</span>
+            </div>
+          </div>
         </div>
 
         <!-- RIGHT PLAYER -->
@@ -114,7 +133,7 @@
 
       <!-- WILD STEAL PANEL -->
       <section id="wildPanel">
-        <h2>Wild Steals</h2>
+        <h2>Wild Powers</h2>
         <div id="wildContent"></div>
       </section>
 
