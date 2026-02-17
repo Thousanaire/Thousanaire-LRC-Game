@@ -2,172 +2,180 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>THOUSANAIRE: LEFT HUB RIGHT Wild</title>
+  <title>THOUSANAIRE CASINO: LEFT HUB RIGHT Wild</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-
-  <!-- INTRO OVERLAY (CLEAN VERSION) -->
+  <!-- INTRO OVERLAY (CASINO STYLE) -->
   <div id="introOverlay" class="intro-overlay">
     <div class="intro-panel">
-
       <div class="intro-avatar-wrapper">
-        <img src="assets/intro/host.png" class="intro-avatar idle-float" alt="Host avatar">
+        <img src="assets/intro/host.png" class="intro-avatar idle-float" alt="Casino Host">
       </div>
-
+      <div class="intro-title">🎰 WELCOME TO THOUSANAIRE CASINO 🎰</div>
+      <div class="intro-subtitle">Choose your game table</div>
       <div class="intro-buttons">
-        <button id="introSkipBtn">Skip</button>
-        <button id="introEnterBtn">Enter Game</button>
+        <button id="introSkipBtn">Skip Intro</button>
+        <button id="introEnterBtn">Enter Casino</button>
       </div>
-
     </div>
   </div>
 
-  <!-- MP3 VOICEOVER -->
+  <!-- CASINO VOICEOVER -->
   <audio id="introVoice" src="assets/audio/intro-voiceover.mp3" preload="auto"></audio>
 
-  <!-- HEADER -->
-  <header>
-    <h1>Thousanaire: LEFT HUB RIGHT Wild</h1>
+  <!-- CASINO HEADER -->
+  <header class="casino-header">
+    <h1>🃏 THOUSANAIRE CASINO 🃏</h1>
     
-    <!-- MODE TOGGLE BUTTON -->
-    <div id="modeToggle" class="mode-toggle">
-      <button id="modeSwitchBtn">Dealer Mode</button>
+    <!-- CASINO MODE SELECTOR -->
+    <div id="casinoFloor" class="casino-floor">
+      <div class="mode-selector">
+        <button id="classicModeBtn" class="casino-table-btn classic-table active">
+          🎲 CLASSIC TABLE
+          <div class="table-subtitle">3 Chips | Hub Pot | Last Man Standing</div>
+        </button>
+        <button id="dealerModeBtn" class="casino-table-btn dealer-table">
+          💀 DEALER TABLE
+          <div class="table-subtitle">5 Chips | Rage Meter | Dealer vs Players</div>
+        </button>
+      </div>
     </div>
 
-    <div id="joinGame">
-      <input type="text" id="nameInput" placeholder="Enter your name" aria-label="Enter your name">
-
+    <!-- PLAYER JOIN PANEL -->
+    <div id="joinGame" class="join-panel">
+      <input type="text" id="nameInput" placeholder="Enter your name to join table" aria-label="Player name">
       <select id="avatarSelect" aria-label="Choose avatar">
-        <option value="assets/avatar/AvatarOne.png">Avatar 1</option>
-        <option value="assets/avatar/AvatarTwo.png">Avatar 2</option>
-        <option value="assets/avatar/Avatar3.png">Avatar 3</option>
-        <option value="assets/avatar/AvatarFour.png">Avatar 4</option>
+        <option value="assets/avatar/AvatarOne.png">👤 Avatar 1</option>
+        <option value="assets/avatar/AvatarTwo.png">👤 Avatar 2</option>
+        <option value="assets/avatar/Avatar3.png">👤 Avatar 3</option>
+        <option value="assets/avatar/AvatarFour.png">👤 Avatar 4</option>
       </select>
-
       <select id="colorSelect" aria-label="Choose color">
-        <option value="#ff4081">Pink</option>
-        <option value="#7c4dff">Purple</option>
-        <option value="#00e5ff">Cyan</option>
-        <option value="#ffeb3b">Gold</option>
+        <option value="#ff4081">🌸 Pink</option>
+        <option value="#7c4dff">💜 Purple</option>
+        <option value="#00e5ff">🌊 Cyan</option>
+        <option value="#ffeb3b">⭐ Gold</option>
       </select>
-
-      <button id="joinBtn">Join Game</button>
+      <button id="joinBtn">JOIN TABLE</button>
     </div>
   </header>
 
   <main>
-    <!-- GAME BOARD -->
-    <section id="game">
-      <h2 id="gameModeTitle">GAME BOARD (Classic Mode)</h2>
+    <!-- GAME TABLES -->
+    <section id="gameTables">
+      <h2 id="gameModeTitle">🎰 CLASSIC TABLE - GAME BOARD</h2>
 
       <div id="table">
-        <!-- TOP PLAYER -->
+        <!-- TOP PLAYER (Logical Seat 0) -->
         <div class="player top" id="player0">
-          <img src="assets/avatar/AvatarOne.png" class="avatar" alt="Player 0 Avatar">
-          <div class="name"></div>
-          <div class="chips"></div>
+          <img src="assets/avatar/AvatarOne.png" class="avatar" alt="Player Top">
+          <div class="name">Waiting...</div>
+          <div class="chips">Chips: 0</div>
         </div>
 
-        <!-- LEFT PLAYER -->
+        <!-- LEFT PLAYER (Logical Seat 3) -->
         <div class="player left" id="player1">
-          <img src="assets/avatar/AvatarTwo.png" class="avatar" alt="Player 1 Avatar">
-          <div class="name"></div>
-          <div class="chips"></div>
+          <img src="assets/avatar/AvatarTwo.png" class="avatar" alt="Player Left">
+          <div class="name">Waiting...</div>
+          <div class="chips">Chips: 0</div>
         </div>
 
-        <!-- CENTER AREA -->
+        <!-- CENTER TABLE AREA -->
         <div id="centerArea">
-          <div id="diceArea">
-            <img src="assets/dice/die1.png" class="die" id="die1" alt="Die 1">
-            <img src="assets/dice/die2.png" class="die" id="die2" alt="Die 2">
-            <img src="assets/dice/die3.png" class="die" id="die3" alt="Die 3">
+          <div id="diceArea" class="dice-area">
+            <img src="assets/dice/die1.png" class="die idle-die" id="die1" alt="Die 1">
+            <img src="assets/dice/die2.png" class="die idle-die" id="die2" alt="Die 2">
+            <img src="assets/dice/die3.png" class="die idle-die" id="die3" alt="Die 3">
           </div>
 
-          <!-- CLASSIC POT DISPLAY -->
-          <div id="classicPot" class="pot-display active">
-            <div>Hub Pot: <span id="classicPotCount">0</span></div>
+          <!-- CLASSIC TABLE DISPLAY (Active by default) -->
+          <div id="classicTable" class="table-display active">
+            <div class="pot-label">🎯 HUB POT</div>
+            <div class="pot-value"><span id="classicPotCount">0</span></div>
           </div>
 
-          <!-- DEALER MODE DISPLAY -->
-          <div id="dealerPot" class="pot-display hidden">
-            <div>Dealer Pot: <span id="dealerPotCount">0</span>/15</div>
-            <div>Rage Meter: <span id="rageCount">0</span>/15</div>
+          <!-- DEALER TABLE DISPLAY (Hidden by default) -->
+          <div id="dealerTable" class="table-display hidden">
+            <div class="dealer-stats">
+              <div>💰 Dealer Pot: <span id="dealerPotCount">0</span>/15</div>
+              <div>🔥 Rage Meter: <span id="rageCount">0</span>/15</div>
+            </div>
             <div class="twist-badges">
-              <span class="twist-badge triple-wild">3★ WIN</span>
-              <span class="twist-badge triple-h">3H LOSS</span>
-              <span class="twist-badge gamble">2H+★ FLIP</span>
+              <span class="twist-badge triple-wild">3⭐ WIN</span>
+              <span class="twist-badge triple-hub">3● LOSS</span>
+              <span class="twist-badge gamble">2●+⭐ FLIP</span>
             </div>
           </div>
         </div>
 
-        <!-- RIGHT PLAYER -->
+        <!-- RIGHT PLAYER (Logical Seat 1) -->
         <div class="player right" id="player2">
-          <img src="assets/avatar/Avatar3.png" class="avatar" alt="Player 2 Avatar">
-          <div class="name"></div>
-          <div class="chips"></div>
+          <img src="assets/avatar/Avatar3.png" class="avatar" alt="Player Right">
+          <div class="name">Waiting...</div>
+          <div class="chips">Chips: 0</div>
         </div>
 
-        <!-- BOTTOM PLAYER -->
+        <!-- BOTTOM PLAYER (Logical Seat 2) -->
         <div class="player bottom" id="player3">
-          <img src="assets/avatar/AvatarFour.png" class="avatar" alt="Player 3 Avatar">
-          <div class="name"></div>
-          <div class="chips"></div>
+          <img src="assets/avatar/AvatarFour.png" class="avatar" alt="Player Bottom">
+          <div class="name">Waiting...</div>
+          <div class="chips">Chips: 0</div>
         </div>
       </div>
 
-      <!-- CONTROLS -->
-      <div class="controls">
-        <button id="rollBtn">Roll Dice</button>
-        <button id="resetBtn">Reset Game</button>
+      <!-- TABLE CONTROLS -->
+      <div class="table-controls">
+        <button id="rollBtn" class="main-action-btn">🎲 ROLL DICE</button>
+        <button id="resetBtn" class="secondary-btn">🔄 NEW GAME</button>
       </div>
 
-      <div id="results"></div>
-      <div id="currentTurn">Current turn: -</div>
+      <!-- GAME STATUS -->
+      <div id="results" class="game-results"></div>
+      <div id="currentTurn" class="current-turn">Current turn: Waiting for players...</div>
     </section>
 
-    <!-- RIGHT COLUMN -->
-    <section id="rightColumn">
-
+    <!-- CASINO SIDEBAR -->
+    <section id="casinoSidebar">
       <!-- WILD STEAL PANEL -->
-      <section id="wildPanel">
-        <h2>Wild Powers</h2>
+      <section id="wildPanel" class="sidebar-panel">
+        <h3>🎭 Wild Powers</h3>
         <div id="wildContent"></div>
       </section>
 
       <!-- ROLL HISTORY -->
-      <section id="history">
-        <h2>Roll History</h2>
+      <section id="history" class="sidebar-panel">
+        <h3>📜 Roll History</h3>
         <div id="rollHistory"></div>
       </section>
 
-      <!-- CHAT BOX -->
-      <section id="chat">
-        <h2>Chat Box</h2>
-
+      <!-- CASINO CHAT -->
+      <section id="chat" class="sidebar-panel chat-panel">
+        <h3>💬 Casino Chat</h3>
         <div id="chatMessages"></div>
-
         <div class="chat-input">
-          <input type="text" id="chatInput" placeholder="Type a message..." aria-label="Chat input">
+          <input type="text" id="chatInput" placeholder="Chat with players..." aria-label="Chat">
           <button id="sendBtn">Send</button>
         </div>
       </section>
-
     </section>
   </main>
 
   <!-- GAME OVER MODAL -->
   <div id="gameOverOverlay" class="modal-overlay hidden">
-    <div class="modal">
+    <div class="modal casino-modal">
       <h2 id="gameOverTitle">Game Over</h2>
-      <p id="gameOverText"></p>
-      <button id="playAgainBtn">Play Again</button>
+      <p id="gameOverText">Last player standing wins!</p>
+      <div class="modal-buttons">
+        <button id="playAgainBtn">🎰 Play Again</button>
+        <button id="changeTableBtn">🪑 Change Table</button>
+      </div>
     </div>
   </div>
 
-  <!-- SOUND EFFECTS -->
+  <!-- CASINO SOUND EFFECTS -->
   <audio id="sndRoll" src="assets/sounds/roll.mp3" preload="auto"></audio>
   <audio id="sndChip" src="assets/sounds/chip.mp3" preload="auto"></audio>
   <audio id="sndWild" src="assets/sounds/wild.mp3" preload="auto"></audio>
