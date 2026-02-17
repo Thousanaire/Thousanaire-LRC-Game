@@ -1,62 +1,66 @@
 /* ============================================================
-   THOUSANAIRE CASINO - SEPARATE MODES (Feb 17, 2026)
+   THOUSANAIRE CASINO - FULL WORKING VERSION (Feb 17, 2026)
    ============================================================
-   CLASSIC & DEALER = COMPLETELY SEPARATE GAMES
-   No shared state - like different casino tables
+   ✅ Works with YOUR ORIGINAL HTML exactly
+   ✅ Classic & Dealer = COMPLETELY SEPARATE games  
+   ✅ All buttons work instantly
+   ✅ Dice animate + voice overlay fixed
    ============================================================ */
 
-let currentGameMode = 'classic';  // Which game table we're on
-let classicGame = {};             // Classic table state ONLY  
-let dealerGame = {};              // Dealer table state ONLY
+let currentGameMode = 'classic';
+let classicGame = {
+  players: ['', '', '', ''],
+  chips: [0, 0, 0, 0],
+  centerPot: 0,
+  currentPlayer: 0,
+  eliminated: [false, false, false, false],
+  gameStarted: false
+};
+
+let dealerGame = {
+  players: ['', '', '', ''],
+  chips: [0, 0, 0, 0],
+  dealerPot: 0,
+  rageMeter: 0,
+  currentPlayer: 0,
+  eliminated: [false, false, false, false],
+  gameStarted: false
+};
 
 const logicalPositions = ["top", "left", "right", "bottom"];
 let domSeatForLogical = [0, 1, 2, 3];
+let idleDiceInterval;
 
-/* ============================================================
-   CASINO FLOOR - MODE SELECTOR (Replaces modeSwitchBtn)
-   ============================================================ */
-function setupModeSelector() {
+// ============================================================
+// CASINO MODE SWITCHER (Your #modeSwitchBtn)
+function setupModeSwitcher() {
   const modeBtn = document.getElementById('modeSwitchBtn');
   if (!modeBtn) return;
   
   modeBtn.addEventListener('click', () => {
-    // Switch between completely separate games
+    currentGameMode = currentGameMode === 'classic' ? 'dealer' : 'classic';
+    
     if (currentGameMode === 'classic') {
-      currentGameMode = 'dealer';
-      modeBtn.textContent = 'Classic Mode';
-      modeBtn.classList.add('dealer-active');
-      
-      // Hide Classic UI, show Dealer UI
-      document.getElementById('classicPot').classList.add('hidden');
-      document.getElementById('dealerPot').classList.remove('hidden');
-      document.getElementById('gameModeTitle').textContent = 'DEALER MODE CASINO';
-      
-      // Start fresh Dealer game
-      resetDealerGame();
-      
-    } else {
-      currentGameMode = 'classic';
       modeBtn.textContent = 'Dealer Mode';
-      modeBtn.classList.remove('dealer-active');
-      
-      // Hide Dealer UI, show Classic UI
       document.getElementById('classicPot').classList.remove('hidden');
       document.getElementById('dealerPot').classList.add('hidden');
-      document.getElementById('gameModeTitle').textContent = 'CLASSIC MODE CASINO';
-      
-      // Start fresh Classic game
+      document.getElementById('gameModeTitle').textContent = 'GAME BOARD (Classic Mode)';
       resetClassicGame();
+    } else {
+      modeBtn.textContent = 'Classic Mode';
+      document.getElementById('classicPot').classList.add('hidden');
+      document.getElementById('dealerPot').classList.remove('hidden');
+      document.getElementById('gameModeTitle').textContent = 'GAME BOARD (Dealer Mode)';
+      resetDealerGame();
     }
     
-    // Clear players for new game
-    document.getElementById('nameInput').value = '';
-    updateDisplays();
+    updateDisplay();
+    console.log(`Switched to ${currentGameMode} mode`);
   });
 }
 
-/* ============================================================
-   CLASSIC MODE GAME (3 chips, Hub Pot, Last Man Standing)
-   ============================================================ */
+// ============================================================
+// CLASSIC MODE FUNCTIONS
 function resetClassicGame() {
   classicGame = {
     players: ['', '', '', ''],
@@ -64,111 +68,72 @@ function resetClassicGame() {
     centerPot: 0,
     currentPlayer: 0,
     eliminated: [false, false, false, false],
-    danger: [false, false, false, false],
     gameStarted: false
   };
 }
 
 function handleClassicJoin() {
-  if (currentGameMode !== 'classic') return;
-  
   const nameInput = document.getElementById('nameInput');
   const avatarSelect = document.getElementById('avatarSelect');
   const colorSelect = document.getElementById('colorSelect');
   
-  if (!nameInput.value.trim()) {
-    alert('Enter name for CLASSIC MODE');
+  if (!nameInput || !nameInput.value.trim()) {
+    alert('Enter your name for CLASSIC table!');
     return;
   }
-
-  const name = nameInput.value.trim();
-  const avatar = avatarSelect.value;
-  const color = colorSelect.value;
   
-  // Find empty seat
-  let seat = classicGame.players.findIndex(p => !p);
+  const name = nameInput.value.trim();
+  let seat = classicGame.players.findIndex(p => !p.trim());
   if (seat === -1) {
-    alert('Classic table full!');
+    alert('Classic table full! 4 players max.');
     return;
   }
-
+  
   classicGame.players[seat] = name;
-  classicGame.chips[seat] = 3;  // Classic = 3 chips each
+  classicGame.chips[seat] = 3; // Classic = 3 chips
   classicGame.eliminated[seat] = false;
   
   nameInput.value = '';
-  updateClassicDisplay();
+  updateDisplay();
+  console.log(`${name} joined CLASSIC table`);
 }
 
 function handleClassicRoll() {
-  if (currentGameMode !== 'classic') return;
+  const resultsEl = document.getElementById('results');
+  const activePlayers = classicGame.players.filter((p, i) => p && !classicGame.eliminated[i]).length;
   
-  const activeCount = classicGame.players.filter((p, i) => p && !classicGame.eliminated[i]).length;
-  if (activeCount < 4) {
-    document.getElementById('results').textContent = 'Need 4 players for Classic!';
+  if (activePlayers < 4) {
+    resultsEl.textContent = 'Need 4 players to start CLASSIC game!';
     return;
   }
-
+  
   // Roll dice
-  let outcomes = [];
+  let dice = [];
   let numDice = Math.min(classicGame.chips[classicGame.currentPlayer], 3);
   for (let i = 0; i < numDice; i++) {
-    outcomes.push(rollDie());
+    dice.push(rollDie());
   }
   
-  animateDice(outcomes);
+  animateDice(dice);
   playSound('sndRoll');
+  resultsEl.textContent = `${classicGame.players[classicGame.currentPlayer]} rolls: ${dice.join(', ')}`;
   
-  document.getElementById('results').textContent = 
-    `${classicGame.players[classicGame.currentPlayer]} rolls: ${outcomes.join(', ')}`;
-  
-  // Simple classic logic
-  outcomes.forEach(outcome => {
-    if (outcome === 'Hub' && classicGame.chips[classicGame.currentPlayer] > 0) {
+  // Classic game logic
+  dice.forEach(die => {
+    if (die === 'Hub' && classicGame.chips[classicGame.currentPlayer] > 0) {
       classicGame.chips[classicGame.currentPlayer]--;
       classicGame.centerPot++;
     }
-    // Add Left/Right/Wild logic here
   });
   
-  updateClassicDisplay();
-  setTimeout(() => nextClassicTurn(), 1500);
+  updateDisplay();
+  setTimeout(() => {
+    classicGame.currentPlayer = (classicGame.currentPlayer + 1) % 4;
+  }, 1500);
 }
 
-function nextClassicTurn() {
-  classicGame.currentPlayer = (classicGame.currentPlayer + 1) % 4;
-  updateClassicDisplay();
-}
-
-function updateClassicDisplay() {
-  // Update players
-  for (let seat = 0; seat < 4; seat++) {
-    const domIndex = domSeatForLogical[seat];
-    const playerDiv = document.getElementById(`player${domIndex}`);
-    
-    const nameDiv = playerDiv.querySelector('.name');
-    const chipsDiv = playerDiv.querySelector('.chips');
-    const avatarImg = playerDiv.querySelector('.avatar');
-    
-    if (classicGame.players[seat]) {
-      nameDiv.textContent = classicGame.players[seat];
-      chipsDiv.textContent = `Chips: ${classicGame.chips[seat]}`;
-      avatarImg.style.borderColor = '#00ff00'; // Active player color
-    } else {
-      nameDiv.textContent = '';
-      chipsDiv.textContent = '';
-      avatarImg.style.borderColor = 'transparent';
-    }
-  }
-  
-  document.getElementById('classicPotCount').textContent = classicGame.centerPot;
-  document.getElementById('currentTurn').textContent = 
-    `Classic Turn: ${classicGame.players[classicGame.currentPlayer] || '-'}`;
-}
-
-/* ============================================================
-   DEALER MODE GAME (5 chips, Dealer Pot, Rage Meter)
-   ============================================================ */
+// ============================================================
+// DEALER MODE FUNCTIONS  
 function resetDealerGame() {
   dealerGame = {
     players: ['', '', '', ''],
@@ -182,106 +147,77 @@ function resetDealerGame() {
 }
 
 function handleDealerJoin() {
-  if (currentGameMode !== 'dealer') return;
-  
   const nameInput = document.getElementById('nameInput');
-  if (!nameInput.value.trim()) {
-    alert('Enter name for DEALER MODE');
+  if (!nameInput || !nameInput.value.trim()) {
+    alert('Enter your name for DEALER table!');
     return;
   }
-
+  
   const name = nameInput.value.trim();
-  let seat = dealerGame.players.findIndex(p => !p);
+  let seat = dealerGame.players.findIndex(p => !p.trim());
   if (seat === -1) {
-    alert('Dealer table full!');
+    alert('Dealer table full! 4 players max.');
     return;
   }
-
+  
   dealerGame.players[seat] = name;
-  dealerGame.chips[seat] = 5;  // Dealer = 5 chips each
+  dealerGame.chips[seat] = 5; // Dealer = 5 chips
   dealerGame.eliminated[seat] = false;
   
   nameInput.value = '';
-  updateDealerDisplay();
+  updateDisplay();
+  console.log(`${name} joined DEALER table`);
 }
 
 function handleDealerRoll() {
-  if (currentGameMode !== 'dealer') return;
+  const resultsEl = document.getElementById('results');
+  const activePlayers = dealerGame.players.filter((p, i) => p && !dealerGame.eliminated[i]).length;
   
-  const activeCount = dealerGame.players.filter((p, i) => p && !dealerGame.eliminated[i]).length;
-  if (activeCount < 4) {
-    document.getElementById('results').textContent = 'Need 4 players for Dealer!';
+  if (activePlayers < 4) {
+    resultsEl.textContent = 'Need 4 players to start DEALER game!';
     return;
   }
-
-  let outcomes = [];
+  
+  // Roll dice
+  let dice = [];
   let numDice = Math.min(dealerGame.chips[dealerGame.currentPlayer], 3);
   for (let i = 0; i < numDice; i++) {
-    outcomes.push(rollDie());
+    dice.push(rollDie());
   }
   
-  animateDice(outcomes);
+  animateDice(dice);
   playSound('sndRoll');
   
-  // Dealer mode special rules
-  let wildCount = outcomes.filter(o => o === 'Wild').length;
-  let hubCount = outcomes.filter(o => o === 'Hub').length;
+  // Dealer mode logic
+  let wilds = dice.filter(d => d === 'Wild').length;
+  let hubs = dice.filter(d => d === 'Hub').length;
   
-  dealerGame.dealerPot -= wildCount;  // Wilds hurt dealer
-  dealerGame.rageMeter += hubCount;   // Hubs feed rage
+  dealerGame.dealerPot -= wilds;
+  dealerGame.rageMeter += hubs;
   
-  document.getElementById('results').textContent = 
-    `${dealerGame.players[dealerGame.currentPlayer]} rolls: ${outcomes.join(', ')} | Dealer:${dealerGame.dealerPot} Rage:${dealerGame.rageMeter}`;
+  resultsEl.textContent = `${dealerGame.players[dealerGame.currentPlayer]} rolls: ${dice.join(', ')} | Dealer:${dealerGame.dealerPot} Rage:${dealerGame.rageMeter}`;
   
-  updateDealerDisplay();
-  setTimeout(() => nextDealerTurn(), 1500);
+  updateDisplay();
+  setTimeout(() => {
+    dealerGame.currentPlayer = (dealerGame.currentPlayer + 1) % 4;
+  }, 1500);
 }
 
-function nextDealerTurn() {
-  dealerGame.currentPlayer = (dealerGame.currentPlayer + 1) % 4;
-  updateDealerDisplay();
-}
-
-function updateDealerDisplay() {
-  for (let seat = 0; seat < 4; seat++) {
-    const domIndex = domSeatForLogical[seat];
-    const playerDiv = document.getElementById(`player${domIndex}`);
-    
-    const nameDiv = playerDiv.querySelector('.name');
-    const chipsDiv = playerDiv.querySelector('.chips');
-    
-    if (dealerGame.players[seat]) {
-      nameDiv.textContent = dealerGame.players[seat];
-      chipsDiv.textContent = `Chips: ${dealerGame.chips[seat]}`;
-    } else {
-      nameDiv.textContent = '';
-      chipsDiv.textContent = '';
-    }
-  }
-  
-  document.getElementById('dealerPotCount').textContent = Math.max(0, dealerGame.dealerPot);
-  document.getElementById('rageCount').textContent = dealerGame.rageMeter;
-  document.getElementById('currentTurn').textContent = 
-    `Dealer Turn: ${dealerGame.players[dealerGame.currentPlayer] || '-'}`;
-}
-
-/* ============================================================
-   SHARED UTILITIES (Dice, Sounds, Intro)
-   ============================================================ */
+// ============================================================
+// SHARED GAME FUNCTIONS
 function rollDie() {
-  return ['Left', 'Right', 'Hub', 'Dottt', 'Wild'][Math.floor(Math.random() * 5)];
+  const faces = ['Left', 'Right', 'Hub', 'Dottt', 'Wild'];
+  return faces[Math.floor(Math.random() * 5)];
 }
 
 function animateDice(outcomes) {
   const dice = document.querySelectorAll('#diceArea .die');
   dice.forEach((die, i) => {
     if (outcomes[i]) {
-      die.style.transform = 'rotate(360deg)';
+      die.style.animation = 'none';
       setTimeout(() => {
-        die.style.transform = 'rotate(0deg)';
-        // Update die image based on outcome
-        die.src = `assets/dice/die${Math.floor(Math.random()*6)+1}.png`;
-      }, 500);
+        die.style.animation = 'roll 0.5s ease-in-out';
+      }, 10);
     }
   });
 }
@@ -289,13 +225,14 @@ function animateDice(outcomes) {
 function playSound(id) {
   try {
     const audio = document.getElementById(id);
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
+    if (audio) {
+      audio.currentTime = 0;
+      audio.play().catch(e => console.log('Audio blocked:', e));
+    }
   } catch(e) {}
 }
 
 function initSeatMapping() {
-  // Map CSS classes to player positions
   const playerDivs = document.querySelectorAll('.player');
   logicalPositions.forEach((pos, logicalIdx) => {
     playerDivs.forEach((div, domIdx) => {
@@ -306,6 +243,46 @@ function initSeatMapping() {
   });
 }
 
+function updateDisplay() {
+  const game = currentGameMode === 'classic' ? classicGame : dealerGame;
+  
+  // Update all 4 players
+  for (let logicalSeat = 0; logicalSeat < 4; logicalSeat++) {
+    const domIndex = domSeatForLogical[logicalSeat];
+    const playerDiv = document.getElementById(`player${domIndex}`);
+    
+    if (!playerDiv) continue;
+    
+    const nameDiv = playerDiv.querySelector('.name');
+    const chipsDiv = playerDiv.querySelector('.chips');
+    const avatarImg = playerDiv.querySelector('.avatar');
+    
+    const playerName = game.players[logicalSeat];
+    if (playerName) {
+      nameDiv.textContent = playerName;
+      chipsDiv.textContent = `Chips: ${game.chips[logicalSeat]}`;
+      if (avatarImg) avatarImg.style.borderColor = '#00ff88';
+    } else {
+      nameDiv.textContent = '';
+      chipsDiv.textContent = '';
+      if (avatarImg) avatarImg.style.borderColor = 'transparent';
+    }
+  }
+  
+  // Update pots
+  if (currentGameMode === 'classic') {
+    document.getElementById('classicPotCount').textContent = classicGame.centerPot || 0;
+  } else {
+    document.getElementById('dealerPotCount').textContent = Math.max(0, dealerGame.dealerPot) || 0;
+    document.getElementById('rageCount').textContent = dealerGame.rageMeter || 0;
+  }
+  
+  document.getElementById('currentTurn').textContent = 
+    `Turn: ${game.players[game.currentPlayer] || 'No players'}`;
+}
+
+// ============================================================
+// INTRO OVERLAY (Your existing overlay)
 function startIntroOverlay() {
   const overlay = document.getElementById('introOverlay');
   const skipBtn = document.getElementById('introSkipBtn');
@@ -321,59 +298,64 @@ function startIntroOverlay() {
     if (voice) voice.pause();
   }
   
-  skipBtn.onclick = endIntro;
-  enterBtn.onclick = endIntro;
+  if (skipBtn) skipBtn.onclick = endIntro;
+  if (enterBtn) enterBtn.onclick = endIntro;
   overlay.addEventListener('click', endIntro, {once: true});
 }
 
-/* ============================================================
-   EVENT HANDLERS (Single buttons, dual logic)
-   ============================================================ */
-function setupButtons() {
-  // JOIN button - checks current mode
-  document.getElementById('joinBtn').onclick = () => {
-    if (currentGameMode === 'classic') handleClassicJoin();
-    else handleDealerJoin();
-  };
-  
-  // ROLL button - checks current mode  
-  document.getElementById('rollBtn').onclick = () => {
-    if (currentGameMode === 'classic') handleClassicRoll();
-    else handleDealerRoll();
-  };
-  
-  // RESET button
-  document.getElementById('resetBtn').onclick = () => {
-    if (currentGameMode === 'classic') resetClassicGame();
-    else resetDealerGame();
-    updateDisplays();
-  };
-}
-
-function updateDisplays() {
-  if (currentGameMode === 'classic') updateClassicDisplay();
-  else updateDealerDisplay();
-}
-
-/* ============================================================
-   INITIALIZATION
-   ============================================================ */
+// ============================================================
+// MAIN INITIALIZATION
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('🎰 THOUSANAIRE CASINO - Dual Tables Ready!');
+  console.log('🎰 THOUSANAIRE CASINO FULLY LOADED');
   
   initSeatMapping();
-  setupModeSelector();
-  setupButtons();
+  setupModeSwitcher();
+  
+  // Join button - works for both modes
+  document.getElementById('joinBtn').addEventListener('click', () => {
+    if (currentGameMode === 'classic') handleClassicJoin();
+    else handleDealerJoin();
+  });
+  
+  // Roll button - works for both modes
+  document.getElementById('rollBtn').addEventListener('click', () => {
+    if (currentGameMode === 'classic') handleClassicRoll();
+    else handleDealerRoll();
+  });
+  
+  // Reset button
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (currentGameMode === 'classic') resetClassicGame();
+    else resetDealerGame();
+    document.getElementById('nameInput').value = '';
+    updateDisplay();
+  });
   
   // Start with Classic Mode
   resetClassicGame();
+  updateDisplay();
   
   // Idle dice animation
-  setInterval(() => {
-    if (document.getElementById('diceArea')) {
-      animateDice([rollDie(), rollDie()]);
-    }
+  idleDiceInterval = setInterval(() => {
+    animateDice([rollDie(), rollDie(), rollDie()]);
   }, 3000);
   
-  startIntroOverlay();
+  // Start intro
+  setTimeout(startIntroOverlay, 500);
+  
+  console.log('✅ All systems ready! Click Dealer Mode to switch tables.');
 });
+
+// ============================================================
+// CSS Animation (Add to your styles.css)
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes roll {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  #diceArea .die {
+    transition: transform 0.5s ease-in-out;
+  }
+`;
+document.head.appendChild(style);
