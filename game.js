@@ -1,162 +1,177 @@
 /* ============================================================
-   THOUSANAIRE GAME - SEPARATE MODES (Feb 17, 2026)
+   THOUSANAIRE CASINO - SEPARATE MODES (Feb 17, 2026)
    ============================================================
-   ✅ CLASSIC & DEALER MODES = COMPLETELY SEPARATE GAMES
-   ✅ Select mode → New game board → Clean slate
-   ✅ No shared state between modes
+   CLASSIC & DEALER = COMPLETELY SEPARATE GAMES
+   No shared state - like different casino tables
    ============================================================ */
 
-let currentGameMode = 'classic';  // Active game mode
-let classicGame = {};            // Classic mode state ONLY
-let dealerGame = {};             // Dealer mode state ONLY
+let currentGameMode = 'classic';  // Which game table we're on
+let classicGame = {};             // Classic table state ONLY  
+let dealerGame = {};              // Dealer table state ONLY
+
+const logicalPositions = ["top", "left", "right", "bottom"];
+let domSeatForLogical = [0, 1, 2, 3];
 
 /* ============================================================
-   GAME MODE SELECTOR (Casino Floor Style)
+   CASINO FLOOR - MODE SELECTOR (Replaces modeSwitchBtn)
    ============================================================ */
-function setupGameModeSelector() {
-  const classicBtn = document.getElementById('classicModeBtn');
-  const dealerBtn = document.getElementById('dealerModeBtn');
+function setupModeSelector() {
+  const modeBtn = document.getElementById('modeSwitchBtn');
+  if (!modeBtn) return;
   
-  if (classicBtn) {
-    classicBtn.addEventListener('click', () => {
-      currentGameMode = 'classic';
-      switchToClassicMode();
-      console.log('🎮 CLASSIC MODE selected');
-    });
-  }
-  
-  if (dealerBtn) {
-    dealerBtn.addEventListener('click', () => {
+  modeBtn.addEventListener('click', () => {
+    // Switch between completely separate games
+    if (currentGameMode === 'classic') {
       currentGameMode = 'dealer';
-      switchToDealerMode();
-      console.log('🎮 DEALER MODE selected');
-    });
-  }
-}
-
-function switchToClassicMode() {
-  // Hide dealer UI
-  const dealerUI = document.getElementById('dealerPot');
-  const rageUI = document.getElementById('rageCount');
-  if (dealerUI) dealerUI.style.display = 'none';
-  if (rageUI) rageUI.style.display = 'none';
-  
-  // Show classic UI
-  const classicUI = document.getElementById('classicPot');
-  if (classicUI) classicUI.style.display = 'block';
-  
-  // Reset to fresh classic game
-  resetClassicGame();
-  document.getElementById('gameModeTitle').textContent = 'CLASSIC MODE';
-}
-
-function switchToDealerMode() {
-  // Hide classic UI
-  const classicUI = document.getElementById('classicPot');
-  if (classicUI) classicUI.style.display = 'none';
-  
-  // Show dealer UI  
-  const dealerUI = document.getElementById('dealerPot');
-  const rageUI = document.getElementById('rageCount');
-  if (dealerUI) dealerUI.style.display = 'block';
-  if (rageUI) rageUI.style.display = 'block';
-  
-  // Reset to fresh dealer game
-  resetDealerGame();
-  document.getElementById('gameModeTitle').textContent = 'DEALER MODE';
+      modeBtn.textContent = 'Classic Mode';
+      modeBtn.classList.add('dealer-active');
+      
+      // Hide Classic UI, show Dealer UI
+      document.getElementById('classicPot').classList.add('hidden');
+      document.getElementById('dealerPot').classList.remove('hidden');
+      document.getElementById('gameModeTitle').textContent = 'DEALER MODE CASINO';
+      
+      // Start fresh Dealer game
+      resetDealerGame();
+      
+    } else {
+      currentGameMode = 'classic';
+      modeBtn.textContent = 'Dealer Mode';
+      modeBtn.classList.remove('dealer-active');
+      
+      // Hide Dealer UI, show Classic UI
+      document.getElementById('classicPot').classList.remove('hidden');
+      document.getElementById('dealerPot').classList.add('hidden');
+      document.getElementById('gameModeTitle').textContent = 'CLASSIC MODE CASINO';
+      
+      // Start fresh Classic game
+      resetClassicGame();
+    }
+    
+    // Clear players for new game
+    document.getElementById('nameInput').value = '';
+    updateDisplays();
+  });
 }
 
 /* ============================================================
-   CLASSIC MODE GAME STATE & LOGIC (Completely Isolated)
+   CLASSIC MODE GAME (3 chips, Hub Pot, Last Man Standing)
    ============================================================ */
 function resetClassicGame() {
   classicGame = {
-    players: [],
+    players: ['', '', '', ''],
     chips: [0, 0, 0, 0],
     centerPot: 0,
     currentPlayer: 0,
     eliminated: [false, false, false, false],
+    danger: [false, false, false, false],
     gameStarted: false
   };
 }
 
-function setupClassicJoinButton() {
-  const joinBtn = document.getElementById("joinBtn");
-  if (!joinBtn) return;
+function handleClassicJoin() {
+  if (currentGameMode !== 'classic') return;
   
-  joinBtn.addEventListener("click", () => {
-    if (currentGameMode !== 'classic') return;
-    
-    const nameInput = document.getElementById("nameInput");
-    if (!nameInput || !nameInput.value.trim()) {
-      alert('Enter name for CLASSIC mode');
-      return;
-    }
+  const nameInput = document.getElementById('nameInput');
+  const avatarSelect = document.getElementById('avatarSelect');
+  const colorSelect = document.getElementById('colorSelect');
+  
+  if (!nameInput.value.trim()) {
+    alert('Enter name for CLASSIC MODE');
+    return;
+  }
 
-    const name = nameInput.value.trim();
-    let seat = classicGame.players.findIndex(p => !p);
-    if (seat >= 4) return;
+  const name = nameInput.value.trim();
+  const avatar = avatarSelect.value;
+  const color = colorSelect.value;
+  
+  // Find empty seat
+  let seat = classicGame.players.findIndex(p => !p);
+  if (seat === -1) {
+    alert('Classic table full!');
+    return;
+  }
 
-    classicGame.players[seat] = name;
-    classicGame.chips[seat] = 3;  // Classic = 3 chips
-    classicGame.eliminated[seat] = false;
-    
-    nameInput.value = "";
-    updateClassicDisplay();
-  });
+  classicGame.players[seat] = name;
+  classicGame.chips[seat] = 3;  // Classic = 3 chips each
+  classicGame.eliminated[seat] = false;
+  
+  nameInput.value = '';
+  updateClassicDisplay();
 }
 
-function setupClassicRollButton() {
-  const rollBtn = document.getElementById("rollBtn");
-  if (!rollBtn) return;
+function handleClassicRoll() {
+  if (currentGameMode !== 'classic') return;
   
-  rollBtn.addEventListener("click", () => {
-    if (currentGameMode !== 'classic') return;
-    
-    const activePlayers = classicGame.players.filter((p, i) => p && !classicGame.eliminated[i]).length;
-    if (activePlayers < 4) {
-      document.getElementById("results").innerText = "Need 4 players!";
-      return;
-    }
+  const activeCount = classicGame.players.filter((p, i) => p && !classicGame.eliminated[i]).length;
+  if (activeCount < 4) {
+    document.getElementById('results').textContent = 'Need 4 players for Classic!';
+    return;
+  }
 
-    const outcomes = [rollDie(), rollDie()];
-    animateDice(outcomes);
-    
-    // Classic mode logic (simplified)
-    document.getElementById("results").innerText = 
-      `${classicGame.players[classicGame.currentPlayer]} rolls: ${outcomes.join(', ')}`;
-    
-    setTimeout(() => {
-      classicGame.currentPlayer = (classicGame.currentPlayer + 1) % 4;
-      updateClassicDisplay();
-    }, 1500);
+  // Roll dice
+  let outcomes = [];
+  let numDice = Math.min(classicGame.chips[classicGame.currentPlayer], 3);
+  for (let i = 0; i < numDice; i++) {
+    outcomes.push(rollDie());
+  }
+  
+  animateDice(outcomes);
+  playSound('sndRoll');
+  
+  document.getElementById('results').textContent = 
+    `${classicGame.players[classicGame.currentPlayer]} rolls: ${outcomes.join(', ')}`;
+  
+  // Simple classic logic
+  outcomes.forEach(outcome => {
+    if (outcome === 'Hub' && classicGame.chips[classicGame.currentPlayer] > 0) {
+      classicGame.chips[classicGame.currentPlayer]--;
+      classicGame.centerPot++;
+    }
+    // Add Left/Right/Wild logic here
   });
+  
+  updateClassicDisplay();
+  setTimeout(() => nextClassicTurn(), 1500);
+}
+
+function nextClassicTurn() {
+  classicGame.currentPlayer = (classicGame.currentPlayer + 1) % 4;
+  updateClassicDisplay();
 }
 
 function updateClassicDisplay() {
-  // Update player table for classic mode only
-  for (let i = 0; i < 4; i++) {
-    const playerDiv = document.getElementById(`player${i}`);
-    if (!playerDiv) continue;
+  // Update players
+  for (let seat = 0; seat < 4; seat++) {
+    const domIndex = domSeatForLogical[seat];
+    const playerDiv = document.getElementById(`player${domIndex}`);
     
-    const name = classicGame.players[i];
-    const chips = classicGame.chips[i];
+    const nameDiv = playerDiv.querySelector('.name');
+    const chipsDiv = playerDiv.querySelector('.chips');
+    const avatarImg = playerDiv.querySelector('.avatar');
     
-    if (name) {
-      playerDiv.querySelector('.name').textContent = name;
-      playerDiv.querySelector('.chips').textContent = `Chips: ${chips}`;
+    if (classicGame.players[seat]) {
+      nameDiv.textContent = classicGame.players[seat];
+      chipsDiv.textContent = `Chips: ${classicGame.chips[seat]}`;
+      avatarImg.style.borderColor = '#00ff00'; // Active player color
+    } else {
+      nameDiv.textContent = '';
+      chipsDiv.textContent = '';
+      avatarImg.style.borderColor = 'transparent';
     }
   }
   
   document.getElementById('classicPotCount').textContent = classicGame.centerPot;
+  document.getElementById('currentTurn').textContent = 
+    `Classic Turn: ${classicGame.players[classicGame.currentPlayer] || '-'}`;
 }
 
 /* ============================================================
-   DEALER MODE GAME STATE & LOGIC (Completely Isolated)
+   DEALER MODE GAME (5 chips, Dealer Pot, Rage Meter)
    ============================================================ */
 function resetDealerGame() {
   dealerGame = {
-    players: [],
+    players: ['', '', '', ''],
     chips: [0, 0, 0, 0],
     dealerPot: 0,
     rageMeter: 0,
@@ -166,164 +181,199 @@ function resetDealerGame() {
   };
 }
 
-function setupDealerJoinButton() {
-  const joinBtn = document.getElementById("joinBtn");
-  if (!joinBtn) return;
+function handleDealerJoin() {
+  if (currentGameMode !== 'dealer') return;
   
-  // Dealer mode uses same button, different logic
-  joinBtn.addEventListener("click", () => {
-    if (currentGameMode !== 'dealer') return;
-    
-    const nameInput = document.getElementById("nameInput");
-    if (!nameInput || !nameInput.value.trim()) {
-      alert('Enter name for DEALER mode');
-      return;
-    }
+  const nameInput = document.getElementById('nameInput');
+  if (!nameInput.value.trim()) {
+    alert('Enter name for DEALER MODE');
+    return;
+  }
 
-    const name = nameInput.value.trim();
-    let seat = dealerGame.players.findIndex(p => !p);
-    if (seat >= 4) return;
+  const name = nameInput.value.trim();
+  let seat = dealerGame.players.findIndex(p => !p);
+  if (seat === -1) {
+    alert('Dealer table full!');
+    return;
+  }
 
-    dealerGame.players[seat] = name;
-    dealerGame.chips[seat] = 5;  // Dealer = 5 chips
-    dealerGame.eliminated[seat] = false;
-    
-    nameInput.value = "";
-    updateDealerDisplay();
-  });
+  dealerGame.players[seat] = name;
+  dealerGame.chips[seat] = 5;  // Dealer = 5 chips each
+  dealerGame.eliminated[seat] = false;
+  
+  nameInput.value = '';
+  updateDealerDisplay();
 }
 
-function setupDealerRollButton() {
-  const rollBtn = document.getElementById("rollBtn");
-  if (!rollBtn) return;
+function handleDealerRoll() {
+  if (currentGameMode !== 'dealer') return;
   
-  rollBtn.addEventListener("click", () => {
-    if (currentGameMode !== 'dealer') return;
-    
-    const activePlayers = dealerGame.players.filter((p, i) => p && !dealerGame.eliminated[i]).length;
-    if (activePlayers < 4) {
-      document.getElementById("results").innerText = "Need 4 players!";
-      return;
-    }
+  const activeCount = dealerGame.players.filter((p, i) => p && !dealerGame.eliminated[i]).length;
+  if (activeCount < 4) {
+    document.getElementById('results').textContent = 'Need 4 players for Dealer!';
+    return;
+  }
 
-    const outcomes = [rollDie(), rollDie()];
-    animateDice(outcomes);
-    
-    // Dealer mode: Wilds hurt dealer pot, Hubs feed rage meter
-    let wilds = outcomes.filter(o => o === 'Wild').length;
-    let hubs = outcomes.filter(o => o === 'Hub').length;
-    
-    dealerGame.dealerPot -= wilds;
-    dealerGame.rageMeter += hubs;
-    
-    document.getElementById("results").innerText = 
-      `${dealerGame.players[dealerGame.currentPlayer]} rolls: ${outcomes.join(', ')} | Dealer Pot: ${dealerGame.dealerPot}`;
-    
-    updateDealerDisplay();
-    
-    setTimeout(() => {
-      dealerGame.currentPlayer = (dealerGame.currentPlayer + 1) % 4;
-    }, 1500);
-  });
+  let outcomes = [];
+  let numDice = Math.min(dealerGame.chips[dealerGame.currentPlayer], 3);
+  for (let i = 0; i < numDice; i++) {
+    outcomes.push(rollDie());
+  }
+  
+  animateDice(outcomes);
+  playSound('sndRoll');
+  
+  // Dealer mode special rules
+  let wildCount = outcomes.filter(o => o === 'Wild').length;
+  let hubCount = outcomes.filter(o => o === 'Hub').length;
+  
+  dealerGame.dealerPot -= wildCount;  // Wilds hurt dealer
+  dealerGame.rageMeter += hubCount;   // Hubs feed rage
+  
+  document.getElementById('results').textContent = 
+    `${dealerGame.players[dealerGame.currentPlayer]} rolls: ${outcomes.join(', ')} | Dealer:${dealerGame.dealerPot} Rage:${dealerGame.rageMeter}`;
+  
+  updateDealerDisplay();
+  setTimeout(() => nextDealerTurn(), 1500);
+}
+
+function nextDealerTurn() {
+  dealerGame.currentPlayer = (dealerGame.currentPlayer + 1) % 4;
+  updateDealerDisplay();
 }
 
 function updateDealerDisplay() {
-  // Update player table for dealer mode only
-  for (let i = 0; i < 4; i++) {
-    const playerDiv = document.getElementById(`player${i}`);
-    if (!playerDiv) continue;
+  for (let seat = 0; seat < 4; seat++) {
+    const domIndex = domSeatForLogical[seat];
+    const playerDiv = document.getElementById(`player${domIndex}`);
     
-    const name = dealerGame.players[i];
-    const chips = dealerGame.chips[i];
+    const nameDiv = playerDiv.querySelector('.name');
+    const chipsDiv = playerDiv.querySelector('.chips');
     
-    if (name) {
-      playerDiv.querySelector('.name').textContent = name;
-      playerDiv.querySelector('.chips').textContent = `Chips: ${chips}`;
+    if (dealerGame.players[seat]) {
+      nameDiv.textContent = dealerGame.players[seat];
+      chipsDiv.textContent = `Chips: ${dealerGame.chips[seat]}`;
+    } else {
+      nameDiv.textContent = '';
+      chipsDiv.textContent = '';
     }
   }
   
   document.getElementById('dealerPotCount').textContent = Math.max(0, dealerGame.dealerPot);
   document.getElementById('rageCount').textContent = dealerGame.rageMeter;
+  document.getElementById('currentTurn').textContent = 
+    `Dealer Turn: ${dealerGame.players[dealerGame.currentPlayer] || '-'}`;
 }
 
 /* ============================================================
-   SHARED FUNCTIONS (Dice, Intro, etc.)
+   SHARED UTILITIES (Dice, Sounds, Intro)
    ============================================================ */
 function rollDie() {
-  const sides = ["Left", "Right", "Hub", "Dottt", "Wild"];
-  return sides[Math.floor(Math.random() * sides.length)];
+  return ['Left', 'Right', 'Hub', 'Dottt', 'Wild'][Math.floor(Math.random() * 5)];
 }
 
 function animateDice(outcomes) {
-  const diceContainer = document.getElementById('diceContainer');
-  if (!diceContainer) return;
-  
-  diceContainer.classList.add('rolling');
-  setTimeout(() => {
-    diceContainer.classList.remove('rolling');
-    renderDice(outcomes);
-  }, 1000);
+  const dice = document.querySelectorAll('#diceArea .die');
+  dice.forEach((die, i) => {
+    if (outcomes[i]) {
+      die.style.transform = 'rotate(360deg)';
+      setTimeout(() => {
+        die.style.transform = 'rotate(0deg)';
+        // Update die image based on outcome
+        die.src = `assets/dice/die${Math.floor(Math.random()*6)+1}.png`;
+      }, 500);
+    }
+  });
 }
 
-function renderDice(outcomes) {
-  const diceContainer = document.getElementById('diceContainer');
-  if (!diceContainer) return;
-  
-  diceContainer.innerHTML = '';
-  outcomes.forEach(outcome => {
-    const die = document.createElement('div');
-    die.className = 'die';
-    die.textContent = {
-      'Left': '←', 'Right': '→', 
-      'Hub': '●', 'Dottt': '⚀', 'Wild': '⭐'
-    }[outcome] || '?';
-    diceContainer.appendChild(die);
+function playSound(id) {
+  try {
+    const audio = document.getElementById(id);
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+  } catch(e) {}
+}
+
+function initSeatMapping() {
+  // Map CSS classes to player positions
+  const playerDivs = document.querySelectorAll('.player');
+  logicalPositions.forEach((pos, logicalIdx) => {
+    playerDivs.forEach((div, domIdx) => {
+      if (div.classList.contains(pos)) {
+        domSeatForLogical[logicalIdx] = domIdx;
+      }
+    });
   });
 }
 
 function startIntroOverlay() {
-  // Same intro overlay as before
-  const overlay = document.getElementById("introOverlay");
+  const overlay = document.getElementById('introOverlay');
+  const skipBtn = document.getElementById('introSkipBtn');
+  const enterBtn = document.getElementById('introEnterBtn');
+  const voice = document.getElementById('introVoice');
+  
   if (!overlay) return;
   
-  overlay.style.display = "flex";
-  
-  const skipBtn = document.getElementById("introSkipBtn");
-  const enterBtn = document.getElementById("introEnterBtn");
-  const voice = document.getElementById("introVoice");
+  overlay.style.display = 'flex';
   
   function endIntro() {
-    overlay.style.display = "none";
+    overlay.style.display = 'none';
     if (voice) voice.pause();
   }
   
-  if (skipBtn) skipBtn.onclick = endIntro;
-  if (enterBtn) enterBtn.onclick = endIntro;
-  overlay.addEventListener('click', endIntro, { once: true });
+  skipBtn.onclick = endIntro;
+  enterBtn.onclick = endIntro;
+  overlay.addEventListener('click', endIntro, {once: true});
 }
 
 /* ============================================================
-   MASTER INITIALIZATION
+   EVENT HANDLERS (Single buttons, dual logic)
    ============================================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  console.log('🎰 CASINO FLOOR - Choose your game!');
+function setupButtons() {
+  // JOIN button - checks current mode
+  document.getElementById('joinBtn').onclick = () => {
+    if (currentGameMode === 'classic') handleClassicJoin();
+    else handleDealerJoin();
+  };
   
-  setupGameModeSelector();
-  setupClassicJoinButton();
-  setupDealerJoinButton();
-  setupClassicRollButton();
-  setupDealerRollButton();
+  // ROLL button - checks current mode  
+  document.getElementById('rollBtn').onclick = () => {
+    if (currentGameMode === 'classic') handleClassicRoll();
+    else handleDealerRoll();
+  };
   
-  // Default to classic mode
-  switchToClassicMode();
+  // RESET button
+  document.getElementById('resetBtn').onclick = () => {
+    if (currentGameMode === 'classic') resetClassicGame();
+    else resetDealerGame();
+    updateDisplays();
+  };
+}
+
+function updateDisplays() {
+  if (currentGameMode === 'classic') updateClassicDisplay();
+  else updateDealerDisplay();
+}
+
+/* ============================================================
+   INITIALIZATION
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('🎰 THOUSANAIRE CASINO - Dual Tables Ready!');
   
-  // Start idle dice + intro
-  const idleInterval = setInterval(() => {
-    if (document.getElementById('diceContainer')) {
+  initSeatMapping();
+  setupModeSelector();
+  setupButtons();
+  
+  // Start with Classic Mode
+  resetClassicGame();
+  
+  // Idle dice animation
+  setInterval(() => {
+    if (document.getElementById('diceArea')) {
       animateDice([rollDie(), rollDie()]);
-      clearInterval(idleInterval);
     }
-  }, 2000);
+  }, 3000);
   
   startIntroOverlay();
 });
